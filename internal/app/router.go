@@ -2,10 +2,10 @@ package app
 
 import (
 	"io"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/eren_dev/go_server/internal/app/health"
 	"github.com/eren_dev/go_server/internal/app/middleware"
 )
 
@@ -20,11 +20,11 @@ func registerRoutes(router *gin.Engine) {
 	router.Use(middleware.SlogLogger())
 	router.Use(middleware.SlogRecovery())
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "API is running"})
-	})
+	router.GET("/health", health.Health)
+	router.GET("/ready", health.Ready)
+
 
 	// api := router.Group("/api")
-
-	// users.Register(api)
+	// {
+	// }
 }

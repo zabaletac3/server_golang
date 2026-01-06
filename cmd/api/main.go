@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/eren_dev/go_server/internal/app"
+	"github.com/eren_dev/go_server/internal/app/health"
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/platform/logger"
 )
@@ -36,7 +37,13 @@ func main() {
 		}
 	}()
 
+	// Server listening then set to ready
+	health.SetReady(true)
+
 	<-ctx.Done()
+
+	// Server stopped then set to not ready
+	health.SetReady(false)
 
 	server.Shutdown(context.Background())
 
