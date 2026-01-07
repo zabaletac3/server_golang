@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -15,6 +16,15 @@ import (
 
 func main() {
 	cfg := config.Load()
+
+	if err := cfg.Validate(); err != nil {
+		logger.Default().Error(
+			context.Background(),
+			"invalid_configuration",
+			"error", err,
+		)
+		os.Exit(1)
+	}
 
 	log := logger.NewSlogLogger(cfg.Env)
 	
@@ -33,7 +43,7 @@ func main() {
 	"port", cfg.Port,
 	"env", cfg.Env,
 )
-
+	
 	go func (){
 		if err := server.Start(); err != nil {
 			logger.Default().Error(context.Background(), "server_error", "error", err)
