@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"github.com/eren_dev/go_server/internal/app"
 	"github.com/eren_dev/go_server/internal/app/health"
 	"github.com/eren_dev/go_server/internal/app/lifecycle"
@@ -15,7 +17,14 @@ import (
 )
 
 func main() {
+	// 🔹 Load .env in development (noop in prod)
+	_ = godotenv.Load(".env")
+
 	cfg := config.Load()
+
+	log := logger.NewSlogLogger(cfg.Env)
+	
+	logger.SetDefault(log)
 
 	if err := cfg.Validate(); err != nil {
 		logger.Default().Error(
@@ -26,17 +35,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	log := logger.NewSlogLogger(cfg.Env)
-	
-	logger.SetDefault(log)
-
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 
 	defer stop()
 
 	workers := lifecycle.NewWorkers()
 
-	server := app.NewServer(cfg)
+	server, err := app.NewServer(cfg)
+	
+	if err != nil {
+		logger.Default().Error(context.Background(), "server_error", "error", err)
+		os.Exit(1)
+	}
 
 	logger.Default().Info(context.Background(),
 	"server_running",

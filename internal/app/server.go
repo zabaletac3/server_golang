@@ -14,7 +14,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func NewServer(cfg *config.Config) *Server {
+func NewServer(cfg *config.Config) (*Server, error) {
 	router := gin.New()
 
 	router.Use(gin.Recovery())
@@ -26,11 +26,13 @@ func NewServer(cfg *config.Config) *Server {
 		httpServer: &http.Server{
 			Addr:         ":" + cfg.Port,
 			Handler:      router,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
-			IdleTimeout:  120 * time.Second,
+			ReadHeaderTimeout: time.Duration(cfg.ReadHeaderTimeoutSecs) * time.Second,
+			ReadTimeout:       time.Duration(cfg.ReadTimeoutSecs) * time.Second,
+			WriteTimeout:      time.Duration(cfg.WriteTimeoutSecs) * time.Second,
+			IdleTimeout:       time.Duration(cfg.IdleTimeoutSecs) * time.Second,
+			MaxHeaderBytes:    cfg.MaxHeaderBytes,
 		},
-	}
+	}, nil
 }
 
 func (s *Server) Start() error {
