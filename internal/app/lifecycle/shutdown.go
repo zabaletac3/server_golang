@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/eren_dev/go_server/internal/app/health"
+	"github.com/eren_dev/go_server/internal/modules/health"
 	"github.com/eren_dev/go_server/internal/platform/logger"
 )
 
 type Shutdowner struct {
-	server   HTTPServer
-	workers  *Workers
-	timeout  time.Duration
+	server  HTTPServer
+	workers *Workers
+	timeout time.Duration
 }
 
 type HTTPServer interface {
@@ -31,11 +31,9 @@ func (s *Shutdowner) Shutdown(ctx context.Context) {
 
 	log.Info(ctx, "shutdown_started")
 
-	// 1️⃣ Dejar de recibir tráfico
 	health.SetReady(false)
 	log.Info(ctx, "readiness_disabled")
 
-	// 2️⃣ Shutdown HTTP con timeout
 	shutdownCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -45,7 +43,6 @@ func (s *Shutdowner) Shutdown(ctx context.Context) {
 		log.Info(ctx, "http_server_stopped")
 	}
 
-	// 3️⃣ Esperar goroutines
 	done := make(chan struct{})
 	go func() {
 		s.workers.Wait()

@@ -7,21 +7,13 @@ type Router struct {
 	group  *gin.RouterGroup
 }
 
-// Root router
 func NewRouter(engine *gin.Engine) *Router {
-	return &Router{
-		engine: engine,
-	}
+	return &Router{engine: engine}
 }
 
-// Group router
 func newGroup(group *gin.RouterGroup) *Router {
-	return &Router{
-		group: group,
-	}
+	return &Router{group: group}
 }
-
-// ---------- Routing ----------
 
 func (r *Router) GET(path string, h AppHandler) {
 	r.handle("GET", path, h)
@@ -33,6 +25,10 @@ func (r *Router) POST(path string, h AppHandler) {
 
 func (r *Router) PUT(path string, h AppHandler) {
 	r.handle("PUT", path, h)
+}
+
+func (r *Router) PATCH(path string, h AppHandler) {
+	r.handle("PATCH", path, h)
 }
 
 func (r *Router) DELETE(path string, h AppHandler) {
@@ -49,8 +45,6 @@ func (r *Router) handle(method, path string, h AppHandler) {
 
 	r.engine.Handle(method, path, handler)
 }
-
-// ---------- Groups ----------
 
 func (r *Router) Group(relativePath string, middleware ...gin.HandlerFunc) *Router {
 	var g *gin.RouterGroup

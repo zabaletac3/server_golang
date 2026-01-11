@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/eren_dev/go_server/internal/app/httperror"
 	"github.com/eren_dev/go_server/internal/platform/logger"
 )
 
@@ -17,7 +16,7 @@ func Adapt(handler AppHandler) gin.HandlerFunc {
 		data, err := handler(c)
 
 		if err != nil {
-			status, payload := httperror.FromError(err)
+			status, payload := FromError(err)
 
 			logger.Default().Error(ctx,
 				"http_request_failed",
@@ -33,12 +32,7 @@ func Adapt(handler AppHandler) gin.HandlerFunc {
 	}
 }
 
-func writeResponse(
-	c *gin.Context,
-	status int,
-	success bool,
-	data any,
-) {
+func writeResponse(c *gin.Context, status int, success bool, data any) {
 	requestID, _ := logger.RequestIDFromContext(c.Request.Context())
 
 	resp := StandardResponse{
@@ -46,8 +40,8 @@ func writeResponse(
 		Data:       data,
 		StatusCode: status,
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
-		Path:        c.Request.URL.Path,
-		RequestID:   requestID,
+		Path:       c.Request.URL.Path,
+		RequestID:  requestID,
 	}
 
 	c.JSON(status, resp)

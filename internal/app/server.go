@@ -8,6 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/eren_dev/go_server/internal/config"
+	"github.com/eren_dev/go_server/internal/modules/health"
+	"github.com/eren_dev/go_server/internal/shared/httpx"
+	"github.com/eren_dev/go_server/internal/shared/middleware"
 )
 
 type Server struct {
@@ -15,17 +18,33 @@ type Server struct {
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
+	gin.SetMode(gin.ReleaseMode)
+
 	router := gin.New()
 
-	router.Use(gin.Recovery())
-	router.Use(gin.Logger())
+	if len(cfg.TrustedProxies) > 0 {
+		router.SetTrustedProxies(cfg.TrustedProxies)
+	}
 
+	router.Use(middleware.SlogRecovery())
+	router.Use(middleware.RequestID())
+	router.Use(middleware.SecurityHeaders(cfg))
+	router.Use(middleware.CORS(cfg))
+	router.Use(middleware.RateLimit(cfg))
+	router.Use(middleware.BodyLimit(cfg))
+	router.Use(middleware.Compression(cfg))
+	router.Use(middleware.SlogLogger())
+
+	router.NoRoute(httpx.NotFoundHandler())
+	router.NoMethod(httpx.MethodNotAllowedHandler())
+
+	health.RegisterRoutes(router)
 	registerRoutes(router)
 
 	return &Server{
 		httpServer: &http.Server{
-			Addr:         ":" + cfg.Port,
-			Handler:      router,
+			Addr:              ":" + cfg.Port,
+			Handler:           router,
 			ReadHeaderTimeout: time.Duration(cfg.ReadHeaderTimeoutSecs) * time.Second,
 			ReadTimeout:       time.Duration(cfg.ReadTimeoutSecs) * time.Second,
 			WriteTimeout:      time.Duration(cfg.WriteTimeoutSecs) * time.Second,
@@ -42,4 +61,3 @@ func (s *Server) Start() error {
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }
-
