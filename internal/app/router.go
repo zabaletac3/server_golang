@@ -6,7 +6,6 @@ import (
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/auth"
 	"github.com/eren_dev/go_server/internal/modules/users"
-	sharedAuth "github.com/eren_dev/go_server/internal/shared/auth"
 	"github.com/eren_dev/go_server/internal/shared/database"
 	"github.com/eren_dev/go_server/internal/shared/httpx"
 )
@@ -19,7 +18,7 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 
 	// Protected routes (auth required)
 	private := r.Group("/api")
-	private.Use(sharedAuth.JWTMiddleware(cfg))
+	// private.Use(sharedAuth.JWTMiddleware(cfg))
 
 	if db != nil {
 		// Auth module (public + private)

@@ -587,7 +587,8 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "name"
+                "name",
+                "password"
             ],
             "properties": {
                 "email": {
@@ -598,7 +599,14 @@ const docTemplate = `{
                 "name": {
                     "description": "Nombre del usuario",
                     "type": "string",
+                    "minLength": 2,
                     "example": "John Doe"
+                },
+                "password": {
+                    "description": "Contraseña (mínimo 6 caracteres)",
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "secret123"
                 }
             }
         },

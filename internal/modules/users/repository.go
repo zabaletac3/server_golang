@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/eren_dev/go_server/internal/shared/database"
 	"github.com/eren_dev/go_server/internal/shared/pagination"
@@ -24,10 +25,16 @@ func NewRepository(db *database.MongoDB) *Repository {
 }
 
 func (r *Repository) Create(ctx context.Context, dto *CreateUserDTO) (*User, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
 	now := time.Now()
 	user := &User{
 		Name:      dto.Name,
 		Email:     dto.Email,
+		Password:  string(hashedPassword),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

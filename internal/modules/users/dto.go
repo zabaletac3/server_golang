@@ -10,9 +10,11 @@ import (
 // @name CreateUserDTO
 type CreateUserDTO struct {
 	// Nombre del usuario
-	Name string `json:"name" binding:"required" example:"John Doe"`
+	Name string `json:"name" binding:"required,min=2" example:"John Doe"`
 	// Email del usuario
 	Email string `json:"email" binding:"required,email" example:"john@example.com"`
+	// Contraseña (mínimo 6 caracteres)
+	Password string `json:"password" binding:"required,min=6" example:"secret123"`
 }
 
 // UpdateUserDTO request para actualizar usuario

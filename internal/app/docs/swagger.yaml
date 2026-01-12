@@ -121,10 +121,17 @@ definitions:
       name:
         description: Nombre del usuario
         example: John Doe
+        minLength: 2
+        type: string
+      password:
+        description: Contraseña (mínimo 6 caracteres)
+        example: secret123
+        minLength: 6
         type: string
     required:
     - email
     - name
+    - password
     type: object
   internal_modules_users.PaginatedUsersResponse:
     properties:
