@@ -42,7 +42,7 @@ func NewServer(cfg *config.Config, db *database.MongoDB) (*Server, error) {
 
 	// Documentation
 	router.GET("/docs", docs.ScalarHandler())
-	router.StaticFile("/docs/openapi.json", "./internal/app/docs/swagger.json")
+	router.GET("/docs/openapi.json", docs.SwaggerJSONHandler())
 
 	health.RegisterRoutes(router)
 	registerRoutes(router, db, cfg)
