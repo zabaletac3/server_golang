@@ -47,36 +47,25 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 20m
           script: |
-            set -x
-            
-            echo "=== Cleaning up old non-Docker setup ==="
-            sudo systemctl stop go-api 2>/dev/null || true
-            sudo systemctl disable go-api 2>/dev/null || true
-            sudo rm -f /etc/systemd/system/go-api.service
-            sudo systemctl daemon-reload
-            pkill -f "./server" || true
-            
             echo "=== Deploying with Docker ==="
             docker pull ghcr.io/zabaletac3/template_golang:latest
             
-            docker stop go-api 2>/dev/null || true
-            docker rm go-api 2>/dev/null || true
+            docker stop go-api || true
+            docker rm go-api || true
             
             docker run -d \
               --name go-api \
               --restart unless-stopped \
               -p 80:8080 \
-              -e APP_ENV=${{ secrets.APP_ENV }} \
+              -e APP_ENV="${{ secrets.APP_ENV }}" \
               -e PORT=8080 \
-              -e "MONGO_URI=${{ secrets.MONGO_URI }}" \
-              -e MONGO_DATABASE=${{ secrets.MONGO_DATABASE }} \
-              -e "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
-              -e JWT_EXPIRATION_MINS=${{ secrets.JWT_EXPIRATION_MINS }} \
-              -e JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }} \
+              -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+              -e MONGO_DATABASE="${{ secrets.MONGO_DATABASE }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e JWT_EXPIRATION_MINS="${{ secrets.JWT_EXPIRATION_MINS }}" \
+              -e JWT_REFRESH_EXPIRATION_DAYS="${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}" \
               ghcr.io/zabaletac3/template_golang:latest
             
             sleep 5
-            echo "=== Container Status ==="
-            docker ps
-            echo "=== Health Check ==="
+            docker ps --filter name=go-api
             curl -sf http://localhost/health && echo " ✅ OK" || docker logs go-api --tail 20
