@@ -1,0 +1,68 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          APP_ENV=${{ secrets.APP_ENV }}
+          PORT=${{ secrets.PORT }}
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          MONGO_DATABASE=${{ secrets.MONGO_DATABASE }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION_MINS=${{ secrets.JWT_EXPIRATION_MINS }}
+          JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}
+          DOMAIN=${{ secrets.DOMAIN }}
+          ACME_EMAIL=${{ secrets.ACME_EMAIL }}
+          EOF
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "."
+          target: "~/repositories/go_server"
+          overwrite: true
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/repositories/go_server
+            
+            # Permisos para SSL
+            touch acme.json && chmod 600 acme.json
+            
+            # Build y deploy (usa docker-compose.simple.yml si no hay dominio)
+            docker compose down --remove-orphans || true
+            
+            if [ "${{ secrets.DOMAIN }}" = "" ] || [ "${{ secrets.DOMAIN }}" = "localhost" ]; then
+              docker compose -f docker-compose.simple.yml build --no-cache
+              docker compose -f docker-compose.simple.yml up -d
+            else
+              docker compose build --no-cache
+              docker compose up -d
+            fi
+            
+            # Verificar
+            echo "⏳ Esperando inicio..."
+            sleep 10
+            docker compose ps
+            curl -sf http://localhost:8080/health && echo "✅ Health OK" || echo "⚠️ Verificar logs"
