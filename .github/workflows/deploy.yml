@@ -41,11 +41,21 @@ jobs:
     steps:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DOMAIN: ${{ secrets.DOMAIN }}
+          ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
+          APP_ENV: ${{ secrets.APP_ENV }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_DATABASE: ${{ secrets.MONGO_DATABASE }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION_MINS: ${{ secrets.JWT_EXPIRATION_MINS }}
+          JWT_REFRESH_EXPIRATION_DAYS: ${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 20m
+          envs: DOMAIN,ACME_EMAIL,APP_ENV,MONGO_URI,MONGO_DATABASE,JWT_SECRET,JWT_EXPIRATION_MINS,JWT_REFRESH_EXPIRATION_DAYS
           script: |
             set -e
             APP_DIR="/home/ubuntu/app"
@@ -55,20 +65,20 @@ jobs:
             cd $APP_DIR
             
             echo "=== Creando .env ==="
-            cat > .env << 'ENVEOF'
-            APP_ENV=${{ secrets.APP_ENV }}
+            cat > .env << EOF
+            APP_ENV=${APP_ENV}
             PORT=8080
-            MONGO_URI=${{ secrets.MONGO_URI }}
-            MONGO_DATABASE=${{ secrets.MONGO_DATABASE }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_EXPIRATION_MINS=${{ secrets.JWT_EXPIRATION_MINS }}
-            JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}
-            DOMAIN=${{ secrets.DOMAIN }}
-            ACME_EMAIL=${{ secrets.ACME_EMAIL }}
-            ENVEOF
+            MONGO_URI=${MONGO_URI}
+            MONGO_DATABASE=${MONGO_DATABASE}
+            JWT_SECRET=${JWT_SECRET}
+            JWT_EXPIRATION_MINS=${JWT_EXPIRATION_MINS}
+            JWT_REFRESH_EXPIRATION_DAYS=${JWT_REFRESH_EXPIRATION_DAYS}
+            DOMAIN=${DOMAIN}
+            ACME_EMAIL=${ACME_EMAIL}
+            EOF
             
             echo "=== Creando traefik.yml ==="
-            cat > traefik.yml << 'TRAEFIKEOF'
+            cat > traefik.yml << EOF
             api:
               dashboard: false
             
@@ -91,14 +101,14 @@ jobs:
             certificatesResolvers:
               letsencrypt:
                 acme:
-                  email: ${{ secrets.ACME_EMAIL }}
+                  email: ${ACME_EMAIL}
                   storage: /acme.json
                   httpChallenge:
                     entryPoint: web
-            TRAEFIKEOF
+            EOF
             
             echo "=== Creando docker-compose.yml ==="
-            cat > docker-compose.yml << 'COMPOSEEOF'
+            cat > docker-compose.yml << EOF
             services:
               traefik:
                 image: traefik:v3.0
@@ -124,7 +134,7 @@ jobs:
                   - .env
                 labels:
                   - "traefik.enable=true"
-                  - "traefik.http.routers.api.rule=Host(\`${{ secrets.DOMAIN }}\`)"
+                  - "traefik.http.routers.api.rule=Host(\\\`${DOMAIN}\\\`)"
                   - "traefik.http.routers.api.entrypoints=websecure"
                   - "traefik.http.routers.api.tls.certresolver=letsencrypt"
                   - "traefik.http.services.api.loadbalancer.server.port=8080"
@@ -136,7 +146,7 @@ jobs:
             networks:
               web:
                 driver: bridge
-            COMPOSEEOF
+            EOF
             
             echo "=== Creando acme.json ==="
             touch acme.json
@@ -146,8 +156,8 @@ jobs:
             docker pull ghcr.io/zabaletac3/template_golang:latest
             
             echo "=== Deteniendo contenedores anteriores ==="
-            docker stop go-api traefik api || true
-            docker rm go-api traefik api || true
+            docker stop go-api traefik api 2>/dev/null || true
+            docker rm go-api traefik api 2>/dev/null || true
             
             echo "=== Iniciando con docker-compose ==="
             docker compose up -d
