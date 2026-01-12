@@ -42,6 +42,10 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+logs/
+
+# Traefik
+acme.json
 
 # Build output
 bin/

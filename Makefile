@@ -5,7 +5,7 @@ LOG_DIR=logs
 
 AIR_BIN=$(shell go env GOPATH)/bin/air
 
-.PHONY: dev build run clean test lint docker-build docker-up docker-down docker-logs
+.PHONY: dev build run clean test lint docker-build docker-up docker-down docker-logs logs-up logs-down
 
 ## 🔥 Desarrollo con hot reload
 dev:
@@ -15,7 +15,7 @@ dev:
 		go install github.com/cosmtrek/air@v1.49.0; \
 	fi
 	@mkdir -p $(TMP_DIR) $(LOG_DIR)
-	$(AIR_BIN) -c .air.toml
+	$(AIR_BIN) -c .air.toml 2>&1 | stdbuf -oL tee $(LOG_DIR)/app.log
 
 ## 🏗️ Build manual
 build:
@@ -62,3 +62,19 @@ docker-logs:
 
 ## 🔄 Docker restart
 docker-restart: docker-down docker-up
+
+## 📊 Observability up (Loki + Grafana)
+logs-up:
+	@echo "📊 Starting Loki + Grafana..."
+	@mkdir -p $(LOG_DIR)
+	docker compose -f docker-compose.observability.yml up -d
+	@echo "✅ Grafana: http://localhost:3000 (admin/admin)"
+
+## 📊 Observability down
+logs-down:
+	@echo "📊 Stopping Loki + Grafana..."
+	docker compose -f docker-compose.observability.yml down
+
+## 📊 Observability logs
+logs-view:
+	docker compose -f docker-compose.observability.yml logs -f
