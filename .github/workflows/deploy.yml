@@ -10,34 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create .env file
-        run: |
-          cat > .env << EOF
-          APP_ENV=${{ secrets.APP_ENV }}
-          PORT=${{ secrets.PORT }}
-          MONGO_URI=${{ secrets.MONGO_URI }}
-          MONGO_DATABASE=${{ secrets.MONGO_DATABASE }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION_MINS=${{ secrets.JWT_EXPIRATION_MINS }}
-          JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}
-          DOMAIN=${{ secrets.DOMAIN }}
-          ACME_EMAIL=${{ secrets.ACME_EMAIL }}
-          EOF
-
-      - name: Copy files to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "."
-          target: "~/repositories/go_server"
-          overwrite: true
-          timeout: 120s
-
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -47,24 +19,52 @@ jobs:
           command_timeout: 30m
           script: |
             set -e
-            cd ~/repositories/go_server
             
-            # Permisos para SSL
+            # Crear directorio
+            mkdir -p ~/repositories
+            cd ~/repositories
+            
+            # Clonar o actualizar repo
+            if [ -d "go_server" ]; then
+              cd go_server
+              git fetch origin
+              git reset --hard origin/main
+            else
+              git clone https://github.com/${{ github.repository }}.git go_server
+              cd go_server
+            fi
+            
+            # Crear .env desde variables
+            cat > .env << 'ENVEOF'
+            APP_ENV=${{ secrets.APP_ENV }}
+            PORT=${{ secrets.PORT }}
+            MONGO_URI=${{ secrets.MONGO_URI }}
+            MONGO_DATABASE=${{ secrets.MONGO_DATABASE }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRATION_MINS=${{ secrets.JWT_EXPIRATION_MINS }}
+            JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}
+            DOMAIN=${{ secrets.DOMAIN }}
+            ACME_EMAIL=${{ secrets.ACME_EMAIL }}
+            ENVEOF
+            
+            # Permisos SSL
             touch acme.json && chmod 600 acme.json
             
-            # Build y deploy (usa docker-compose.simple.yml si no hay dominio)
+            # Build y deploy
             docker compose down --remove-orphans || true
             
-            if [ "${{ secrets.DOMAIN }}" = "" ] || [ "${{ secrets.DOMAIN }}" = "localhost" ]; then
-              docker compose -f docker-compose.simple.yml build --no-cache
+            if [ -z "${{ secrets.DOMAIN }}" ] || [ "${{ secrets.DOMAIN }}" = "localhost" ]; then
+              echo "🚀 Deploy sin SSL (docker-compose.simple.yml)"
+              docker compose -f docker-compose.simple.yml build
               docker compose -f docker-compose.simple.yml up -d
             else
-              docker compose build --no-cache
+              echo "🚀 Deploy con Traefik + SSL"
+              docker compose build
               docker compose up -d
             fi
             
             # Verificar
             echo "⏳ Esperando inicio..."
             sleep 10
-            docker compose ps
-            curl -sf http://localhost:8080/health && echo "✅ Health OK" || echo "⚠️ Verificar logs"
+            docker compose ps || docker compose -f docker-compose.simple.yml ps
+            curl -sf http://localhost:8080/health && echo "✅ Health OK" || echo "⚠️ Verificar logs con: docker compose logs"
