@@ -45,29 +45,23 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 20m
           script: |
+            set -x
+            
             echo "=== Cleaning up old non-Docker setup ==="
-            # Stop and disable systemd service
             sudo systemctl stop go-api 2>/dev/null || true
             sudo systemctl disable go-api 2>/dev/null || true
             sudo rm -f /etc/systemd/system/go-api.service
             sudo systemctl daemon-reload
-            
-            # Kill any remaining process
             pkill -f "./server" || true
             
-            # Clean old files (optional, keep if you want)
-            # rm -rf ~/repositories/go_server
-            
             echo "=== Deploying with Docker ==="
-            # Pull image (public)
             docker pull ghcr.io/zabaletac3/template_golang:latest
             
-            # Stop and remove old container
             docker stop go-api 2>/dev/null || true
             docker rm go-api 2>/dev/null || true
             
-            # Run new container
             docker run -d \
               --name go-api \
               --restart unless-stopped \
@@ -81,11 +75,8 @@ jobs:
               -e JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }} \
               ghcr.io/zabaletac3/template_golang:latest
             
-            # Wait and verify
             sleep 5
-            echo ""
             echo "=== Container Status ==="
-            docker ps | grep go-api || echo "Container not running!"
-            echo ""
+            docker ps
             echo "=== Health Check ==="
-            curl -sf http://localhost/health && echo " ✅ Docker running!" || docker logs go-api --tail 30
+            curl -sf http://localhost/health && echo " ✅ OK" || docker logs go-api --tail 20
