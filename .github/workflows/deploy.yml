@@ -24,17 +24,13 @@ jobs:
 
       - name: Create .env file
         run: |
-          cat > .env << EOF
-          APP_ENV=${{ secrets.APP_ENV }}
-          PORT=${{ secrets.PORT }}
-          MONGO_URI=${{ secrets.MONGO_URI }}
-          MONGO_DATABASE=${{ secrets.MONGO_DATABASE }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION_MINS=${{ secrets.JWT_EXPIRATION_MINS }}
-          JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}
-          DOMAIN=${{ secrets.DOMAIN }}
-          ACME_EMAIL=${{ secrets.ACME_EMAIL }}
-          EOF
+          echo "APP_ENV=${{ secrets.APP_ENV }}" > .env
+          echo "PORT=${{ secrets.PORT }}" >> .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "MONGO_DATABASE=${{ secrets.MONGO_DATABASE }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "JWT_EXPIRATION_MINS=${{ secrets.JWT_EXPIRATION_MINS }}" >> .env
+          echo "JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}" >> .env
 
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -53,18 +49,29 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            set -e
             cd ~/repositories/go_server
             
             # Detener proceso anterior si existe
             pkill -f "./server" || true
+            sleep 2
             
             # Dar permisos de ejecución
             chmod +x server
+            
+            # Verificar .env
+            echo "=== .env content ==="
+            cat .env
+            echo "===================="
             
             # Iniciar servidor en background
             nohup ./server > app.log 2>&1 &
             
             # Esperar y verificar
             sleep 5
-            curl -sf http://localhost:8080/health && echo "✅ Health OK" || cat app.log
+            
+            if curl -sf http://localhost:8080/health; then
+              echo "✅ Health OK - Server running!"
+            else
+              echo "❌ Server failed to start. Logs:"
+              cat app.log
+            fi
