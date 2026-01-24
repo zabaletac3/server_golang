@@ -1,4 +1,4 @@
-package users
+package tenant
 
 import (
 	"time"
@@ -6,14 +6,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type User struct {
+type Tenant struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	OwnerID   primitive.ObjectID `bson:"owner_id"`
 	Name      string             `bson:"name"`
-	Email     string             `bson:"email"`
-	Phone     string             `bson:"phone"`
-	Password  string             `bson:"password,omitempty"`
-	TenantIds []primitive.ObjectID `bson:"tenant_ids"`
-	IsSuperAdmin bool             `bson:"is_super_admin"`
+	Status    TenantStatus       `bson:"status" json:"status"`
 	CreatedAt time.Time          `bson:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at"`
 	DeletedAt *time.Time          `bson:"deleted_at,omitempty"`

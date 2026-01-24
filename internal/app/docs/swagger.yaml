@@ -112,6 +112,61 @@ definitions:
         example: John Doe
         type: string
     type: object
+  internal_modules_tenant.CreateTenantDTO:
+    properties:
+      name:
+        description: Nombre del tenant
+        example: Mi Empresa
+        minLength: 2
+        type: string
+      owner_id:
+        description: ID del propietario (referencia a users)
+        example: 507f1f77bcf86cd799439011
+        type: string
+    required:
+    - name
+    - owner_id
+    type: object
+  internal_modules_tenant.TenantResponse:
+    properties:
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      id:
+        description: ID del tenant
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        description: Nombre del tenant
+        example: Mi Empresa
+        type: string
+      owner_id:
+        description: ID del propietario
+        example: 507f1f77bcf86cd799439011
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/internal_modules_tenant.TenantStatus'
+        description: Estado del tenant
+        example: active
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  internal_modules_tenant.TenantStatus:
+    enum:
+    - active
+    - inactive
+    type: string
+    x-enum-varnames:
+    - Active
+    - Inactive
+  internal_modules_tenant.UpdateTenantDTO:
+    properties:
+      name:
+        example: Jane Doe
+        type: string
+    type: object
   internal_modules_users.CreateUserDTO:
     properties:
       email:
@@ -184,7 +239,7 @@ info:
   contact:
     email: support@example.com
     name: API Support
-  description: Template API con Go + Gin + MongoDB
+  description: Template API con Go + Gin + MongoDBD
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -311,6 +366,145 @@ paths:
       summary: Registrar usuario
       tags:
       - auth
+  /tenants:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de tenants
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_tenant.TenantResponse'
+            type: array
+      summary: Listar tenants
+      tags:
+      - tenant
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo tenant en el sistema
+      parameters:
+      - description: Datos del tenant
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_tenant.CreateTenantDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear tenant
+      tags:
+      - tenant
+  /tenants/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un tenant por su ID (soft delete)
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar tenant
+      tags:
+      - tenant
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un tenant por su ID
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener tenant
+      tags:
+      - tenant
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un tenant existente
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_tenant.UpdateTenantDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar tenant
+      tags:
+      - tenant
   /users:
     get:
       consumes:

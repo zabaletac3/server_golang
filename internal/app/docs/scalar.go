@@ -14,7 +14,7 @@ const scalarHTML = `<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-    <script id="api-reference" data-url="/docs/openapi.json"></script>
+    <script id="api-reference" data-url="/docs/openapi.json" data-configuration='{"layout": "classic"}'></script>
     <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
 </body>
 </html>`

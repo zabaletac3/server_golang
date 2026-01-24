@@ -90,3 +90,8 @@ logs-down:
 ## 📊 Observability logs
 logs-view:
 	docker compose -f docker-compose.observability.yml logs -f
+
+## 🌱 Database seed (super admins)
+seed:
+	@echo "🌱 Running database seeds..."
+	go run ./cmd/seed

@@ -207,6 +207,216 @@ const docTemplate = `{
                 }
             }
         },
+        "/tenants": {
+            "get": {
+                "description": "Obtiene una lista de tenants",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "Listar tenants",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crea un nuevo tenant en el sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "Crear tenant",
+                "parameters": [
+                    {
+                        "description": "Datos del tenant",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.CreateTenantDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tenants/{id}": {
+            "get": {
+                "description": "Obtiene un tenant por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "Obtener tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Elimina un tenant por su ID (soft delete)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "Eliminar tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Actualiza un tenant existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "Actualizar tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.UpdateTenantDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "description": "Obtiene una lista paginada de usuarios",
@@ -583,6 +793,83 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_modules_tenant.CreateTenantDTO": {
+            "type": "object",
+            "required": [
+                "name",
+                "owner_id"
+            ],
+            "properties": {
+                "name": {
+                    "description": "Nombre del tenant",
+                    "type": "string",
+                    "minLength": 2,
+                    "example": "Mi Empresa"
+                },
+                "owner_id": {
+                    "description": "ID del propietario (referencia a users)",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "internal_modules_tenant.TenantResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "id": {
+                    "description": "ID del tenant",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "name": {
+                    "description": "Nombre del tenant",
+                    "type": "string",
+                    "example": "Mi Empresa"
+                },
+                "owner_id": {
+                    "description": "ID del propietario",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "status": {
+                    "description": "Estado del tenant",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/internal_modules_tenant.TenantStatus"
+                        }
+                    ],
+                    "example": "active"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "internal_modules_tenant.TenantStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "inactive"
+            ],
+            "x-enum-varnames": [
+                "Active",
+                "Inactive"
+            ]
+        },
+        "internal_modules_tenant.UpdateTenantDTO": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                }
+            }
+        },
         "internal_modules_users.CreateUserDTO": {
             "type": "object",
             "required": [
@@ -693,7 +980,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Go Server API",
-	Description:      "Template API con Go + Gin + MongoDB",
+	Description:      "Template API con Go + Gin + MongoDBD",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
