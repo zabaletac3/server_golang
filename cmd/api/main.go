@@ -19,7 +19,7 @@ import (
 
 // @title           Go Server API
 // @version         1.0
-// @description     Template API con Go + Gin + MongoDB
+// @description     Template API con Go + Gin + MongoDBD
 // @termsOfService  http://swagger.io/terms/
 
 // @contact.name   API Support
