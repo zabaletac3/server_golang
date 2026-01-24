@@ -14,17 +14,28 @@ import (
 	"github.com/eren_dev/go_server/internal/shared/pagination"
 )
 
-type Repository struct {
+type UserRepository interface {
+	Create(ctx context.Context, dto *CreateUserDTO) (*User, error)
+	CreateWithPassword(ctx context.Context, name, email, hashedPassword string) (*User, error)
+	CreateUser(ctx context.Context, user *User) (*User, error)
+	FindAll(ctx context.Context, params pagination.Params) ([]*User, int64, error)
+	FindByID(ctx context.Context, id string) (*User, error)
+	FindByEmail(ctx context.Context, email string) (*User, error)
+	Update(ctx context.Context, id string, dto *UpdateUserDTO) (*User, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type userRepository struct {
 	collection *mongo.Collection
 }
 
-func NewRepository(db *database.MongoDB) *Repository {
-	return &Repository{
+func NewRepository(db *database.MongoDB) UserRepository {
+	return &userRepository{
 		collection: db.Collection("users"),
 	}
 }
 
-func (r *Repository) Create(ctx context.Context, dto *CreateUserDTO) (*User, error) {
+func (r *userRepository) Create(ctx context.Context, dto *CreateUserDTO) (*User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -51,7 +62,7 @@ func (r *Repository) Create(ctx context.Context, dto *CreateUserDTO) (*User, err
 	return user, nil
 }
 
-func (r *Repository) CreateWithPassword(ctx context.Context, name, email, hashedPassword string) (*User, error) {
+func (r *userRepository) CreateWithPassword(ctx context.Context, name, email, hashedPassword string) (*User, error) {
 	now := time.Now()
 	user := &User{
 		Name:      name,
@@ -73,8 +84,33 @@ func (r *Repository) CreateWithPassword(ctx context.Context, name, email, hashed
 	return user, nil
 }
 
-func (r *Repository) FindAll(ctx context.Context, params pagination.Params) ([]*User, int64, error) {
-	total, err := r.collection.CountDocuments(ctx, bson.M{})
+func (r *userRepository) CreateUser(ctx context.Context, user *User) (*User, error) {
+	if user.ID.IsZero() {
+		user.ID = primitive.NewObjectID()
+	}
+	if user.CreatedAt.IsZero() {
+		user.CreatedAt = time.Now()
+	}
+	if user.UpdatedAt.IsZero() {
+		user.UpdatedAt = time.Now()
+	}
+
+	result, err := r.collection.InsertOne(ctx, user)
+	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			return nil, ErrEmailExists
+		}
+		return nil, err
+	}
+
+	user.ID = result.InsertedID.(primitive.ObjectID)
+	return user, nil
+}
+
+func (r *userRepository) FindAll(ctx context.Context, params pagination.Params) ([]*User, int64, error) {
+	filter := bson.M{"deleted_at": nil}
+
+	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -84,7 +120,7 @@ func (r *Repository) FindAll(ctx context.Context, params pagination.Params) ([]*
 		SetLimit(params.Limit).
 		SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -98,7 +134,7 @@ func (r *Repository) FindAll(ctx context.Context, params pagination.Params) ([]*
 	return users, total, nil
 }
 
-func (r *Repository) FindByID(ctx context.Context, id string) (*User, error) {
+func (r *userRepository) FindByID(ctx context.Context, id string) (*User, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, ErrInvalidUserID
@@ -116,7 +152,7 @@ func (r *Repository) FindByID(ctx context.Context, id string) (*User, error) {
 	return &user, nil
 }
 
-func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
+func (r *userRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	var user User
 	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
@@ -129,7 +165,7 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, erro
 	return &user, nil
 }
 
-func (r *Repository) Update(ctx context.Context, id string, dto *UpdateUserDTO) (*User, error) {
+func (r *userRepository) Update(ctx context.Context, id string, dto *UpdateUserDTO) (*User, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, ErrInvalidUserID
@@ -165,18 +201,23 @@ func (r *Repository) Update(ctx context.Context, id string, dto *UpdateUserDTO) 
 	return r.FindByID(ctx, id)
 }
 
-func (r *Repository) Delete(ctx context.Context, id string) error {
+func (r *userRepository) Delete(ctx context.Context, id string) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return ErrInvalidUserID
 	}
 
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	now := time.Now()
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": objectID},
+		bson.M{"$set": bson.M{"deleted_at": now}},
+	)
 	if err != nil {
 		return err
 	}
 
-	if result.DeletedCount == 0 {
+	if result.MatchedCount == 0 {
 		return ErrUserNotFound
 	}
 

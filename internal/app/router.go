@@ -5,6 +5,7 @@ import (
 
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/auth"
+	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/modules/users"
 	"github.com/eren_dev/go_server/internal/shared/database"
 	"github.com/eren_dev/go_server/internal/shared/httpx"
@@ -26,5 +27,8 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 
 		// Users module (protected)
 		users.RegisterRoutes(private, db)
+
+		// Tenant module (protected)
+		tenant.RegisterRoutes(private, db)
 	}
 }
