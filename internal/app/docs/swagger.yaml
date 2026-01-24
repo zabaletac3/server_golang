@@ -1,5 +1,64 @@
 basePath: /api
 definitions:
+  github_com_eren_dev_go_server_internal_modules_permissions.Action:
+    enum:
+    - create
+    - read
+    - update
+    - delete
+    - approve
+    - export
+    - manage
+    type: string
+    x-enum-varnames:
+    - ActionCreate
+    - ActionRead
+    - ActionUpdate
+    - ActionDelete
+    - ActionApprove
+    - ActionExport
+    - ActionManage
+  github_com_eren_dev_go_server_internal_modules_permissions.PermissionResponse:
+    properties:
+      action:
+        allOf:
+        - $ref: '#/definitions/github_com_eren_dev_go_server_internal_modules_permissions.Action'
+        example: read
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      resource:
+        allOf:
+        - $ref: '#/definitions/github_com_eren_dev_go_server_internal_modules_permissions.Resource'
+        example: users
+    type: object
+  github_com_eren_dev_go_server_internal_modules_permissions.Resource:
+    enum:
+    - dashboard
+    - users
+    - appointments
+    - patients
+    - owners
+    - inventory
+    - billing
+    - reports
+    - settings
+    - roles
+    type: string
+    x-enum-varnames:
+    - ResourceDashboard
+    - ResourceUsers
+    - ResourceAppointments
+    - ResourcePatients
+    - ResourceOwners
+    - ResourceInventory
+    - ResourceBilling
+    - ResourceReports
+    - ResourceSettings
+    - ResourceRoles
   github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo:
     properties:
       limit:
@@ -111,6 +170,176 @@ definitions:
         description: Nombre del usuario
         example: John Doe
         type: string
+    type: object
+  internal_modules_permissions.Action:
+    enum:
+    - create
+    - read
+    - update
+    - delete
+    - approve
+    - export
+    - manage
+    type: string
+    x-enum-varnames:
+    - ActionCreate
+    - ActionRead
+    - ActionUpdate
+    - ActionDelete
+    - ActionApprove
+    - ActionExport
+    - ActionManage
+  internal_modules_permissions.AvailableOptionsResponse:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/internal_modules_permissions.Action'
+        type: array
+      resources:
+        items:
+          $ref: '#/definitions/internal_modules_permissions.Resource'
+        type: array
+    type: object
+  internal_modules_permissions.CreatePermissionDTO:
+    properties:
+      action:
+        allOf:
+        - $ref: '#/definitions/internal_modules_permissions.Action'
+        example: read
+      resource:
+        allOf:
+        - $ref: '#/definitions/internal_modules_permissions.Resource'
+        example: users
+    required:
+    - action
+    - resource
+    type: object
+  internal_modules_permissions.PermissionResponse:
+    properties:
+      action:
+        allOf:
+        - $ref: '#/definitions/internal_modules_permissions.Action'
+        example: read
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      resource:
+        allOf:
+        - $ref: '#/definitions/internal_modules_permissions.Resource'
+        example: users
+    type: object
+  internal_modules_permissions.Resource:
+    enum:
+    - dashboard
+    - users
+    - appointments
+    - patients
+    - owners
+    - inventory
+    - billing
+    - reports
+    - settings
+    - roles
+    type: string
+    x-enum-varnames:
+    - ResourceDashboard
+    - ResourceUsers
+    - ResourceAppointments
+    - ResourcePatients
+    - ResourceOwners
+    - ResourceInventory
+    - ResourceBilling
+    - ResourceReports
+    - ResourceSettings
+    - ResourceRoles
+  internal_modules_roles.CreateRoleDTO:
+    properties:
+      description:
+        example: Rol con acceso total
+        type: string
+      name:
+        example: Administrador
+        minLength: 2
+        type: string
+      permission_ids:
+        example:
+        - 507f1f77bcf86cd799439011
+        - 507f1f77bcf86cd799439012
+        items:
+          type: string
+        type: array
+      tenant_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+    required:
+    - name
+    - tenant_id
+    type: object
+  internal_modules_roles.RoleResponse:
+    properties:
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      description:
+        example: Rol con acceso total
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        example: Administrador
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/github_com_eren_dev_go_server_internal_modules_permissions.PermissionResponse'
+        type: array
+      tenant_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  internal_modules_roles.RoleSimpleResponse:
+    properties:
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      description:
+        example: Rol con acceso total
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        example: Administrador
+        type: string
+      permission_ids:
+        items:
+          type: string
+        type: array
+      tenant_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  internal_modules_roles.UpdateRoleDTO:
+    properties:
+      description:
+        example: Rol con acceso total
+        type: string
+      name:
+        example: Administrador
+        type: string
+      permission_ids:
+        items:
+          type: string
+        type: array
     type: object
   internal_modules_tenant.CreateTenantDTO:
     properties:
@@ -366,6 +595,255 @@ paths:
       summary: Registrar usuario
       tags:
       - auth
+  /permissions:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los permisos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
+            type: array
+      summary: Listar permisos
+      tags:
+      - permissions
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo permiso
+      parameters:
+      - description: Datos del permiso
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_permissions.CreatePermissionDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+      summary: Crear permiso
+      tags:
+      - permissions
+  /permissions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un permiso por su ID
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar permiso
+      tags:
+      - permissions
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un permiso por su ID
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener permiso
+      tags:
+      - permissions
+  /permissions/options:
+    get:
+      description: Obtiene recursos y acciones disponibles para crear permisos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.AvailableOptionsResponse'
+      summary: Opciones disponibles
+      tags:
+      - permissions
+  /roles:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene todos los roles de un tenant
+      parameters:
+      - description: Tenant ID
+        in: query
+        name: tenant_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_roles.RoleSimpleResponse'
+            type: array
+      summary: Listar roles por tenant
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo rol para un tenant
+      parameters:
+      - description: Datos del rol
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_roles.CreateRoleDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleSimpleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+      summary: Crear rol
+      tags:
+      - roles
+  /roles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un rol por su ID (soft delete)
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar rol
+      tags:
+      - roles
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un rol por su ID con permisos expandidos
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener rol
+      tags:
+      - roles
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un rol existente
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_roles.UpdateRoleDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleSimpleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar rol
+      tags:
+      - roles
   /tenants:
     get:
       consumes:
