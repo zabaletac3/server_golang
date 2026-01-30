@@ -58,6 +58,14 @@ type Config struct {
 	JWTSecret            string
 	JWTExpiration        time.Duration
 	JWTRefreshExpiration time.Duration
+
+	// Payment Providers
+	PaymentDefaultProvider string
+	WompiPublicKey         string
+	WompiPrivateKey        string
+	WompiWebhookSecret     string
+	StripeAPIKey           string
+	StripeWebhookSecret    string
 }
 
 func Load() *Config {
@@ -111,6 +119,14 @@ func Load() *Config {
 		JWTSecret:            getEnv("JWT_SECRET", ""),
 		JWTExpiration:        time.Duration(getEnvInt("JWT_EXPIRATION_MINS", 15)) * time.Minute,
 		JWTRefreshExpiration: time.Duration(getEnvInt("JWT_REFRESH_EXPIRATION_DAYS", 7)) * 24 * time.Hour,
+
+		// Payment Providers
+		PaymentDefaultProvider: getEnv("PAYMENT_DEFAULT_PROVIDER", "wompi"),
+		WompiPublicKey:         getEnv("WOMPI_PUBLIC_KEY", ""),
+		WompiPrivateKey:        getEnv("WOMPI_PRIVATE_KEY", ""),
+		WompiWebhookSecret:     getEnv("WOMPI_WEBHOOK_SECRET", ""),
+		StripeAPIKey:           getEnv("STRIPE_API_KEY", ""),
+		StripeWebhookSecret:    getEnv("STRIPE_WEBHOOK_SECRET", ""),
 	}
 }
 

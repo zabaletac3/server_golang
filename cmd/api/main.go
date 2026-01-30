@@ -14,6 +14,8 @@ import (
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/health"
 	"github.com/eren_dev/go_server/internal/platform/logger"
+	"github.com/eren_dev/go_server/internal/platform/payment"
+	"github.com/eren_dev/go_server/internal/platform/payment/wompi"
 	"github.com/eren_dev/go_server/internal/shared/database"
 )
 
@@ -65,9 +67,42 @@ func main() {
 		logger.Default().Info(context.Background(), "database_disabled", "reason", "MONGO_DATABASE not configured")
 	}
 
+	// Initialize Payment Manager
+	var defaultProvider payment.ProviderType
+	switch cfg.PaymentDefaultProvider {
+	case "wompi":
+		defaultProvider = payment.ProviderWompi
+	case "stripe":
+		defaultProvider = payment.ProviderStripe
+	default:
+		defaultProvider = payment.ProviderWompi
+	}
+
+	paymentManager := payment.NewPaymentManager(defaultProvider)
+
+	// Register Wompi provider if configured
+	if cfg.WompiPublicKey != "" && cfg.WompiPrivateKey != "" {
+		wompiProvider := wompi.NewWompiProvider(
+			cfg.WompiPublicKey,
+			cfg.WompiPrivateKey,
+			cfg.WompiWebhookSecret,
+		)
+		if err := paymentManager.RegisterProvider(wompiProvider); err != nil {
+			logger.Default().Error(context.Background(), "failed_to_register_wompi", "error", err)
+		} else {
+			logger.Default().Info(context.Background(), "payment_provider_registered", "provider", "wompi")
+		}
+	}
+
+	// TODO: Register Stripe provider when implemented
+	// if cfg.StripeAPIKey != "" {
+	//     stripeProvider := stripe.NewStripeProvider(cfg.StripeAPIKey, cfg.StripeWebhookSecret)
+	//     paymentManager.RegisterProvider(stripeProvider)
+	// }
+
 	workers := lifecycle.NewWorkers()
 
-	server, err := app.NewServer(cfg, db)
+	server, err := app.NewServer(cfg, db, paymentManager)
 	if err != nil {
 		logger.Default().Error(context.Background(), "server_error", "error", err)
 		os.Exit(1)

@@ -112,59 +112,446 @@ definitions:
         example: John Doe
         type: string
     type: object
+  internal_modules_payments.CreatePaymentDTO:
+    properties:
+      amount:
+        example: 4900
+        minimum: 1
+        type: integer
+      concept:
+        example: Pago mensual - Plan Pro
+        type: string
+      currency:
+        example: USD
+        type: string
+      external_transaction_id:
+        example: wompi_tx_123456
+        type: string
+      failure_reason:
+        example: Fondos insuficientes
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      payment_method:
+        example: wompi
+        type: string
+      period_end:
+        example: "2024-02-01T00:00:00Z"
+        type: string
+      period_start:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      processed_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/internal_modules_payments.PaymentStatus'
+        example: completed
+      tenant_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+    required:
+    - amount
+    - concept
+    - currency
+    - payment_method
+    - status
+    - tenant_id
+    type: object
+  internal_modules_payments.PaymentResponse:
+    properties:
+      amount:
+        example: 4900
+        type: integer
+      concept:
+        example: Pago mensual - Plan Pro
+        type: string
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      currency:
+        example: USD
+        type: string
+      external_transaction_id:
+        example: wompi_tx_123456
+        type: string
+      failure_reason:
+        example: Fondos insuficientes
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      payment_method:
+        example: wompi
+        type: string
+      period_end:
+        example: "2024-02-01T00:00:00Z"
+        type: string
+      period_start:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      processed_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/internal_modules_payments.PaymentStatus'
+        example: completed
+      tenant_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  internal_modules_payments.PaymentStatus:
+    enum:
+    - pending
+    - completed
+    - failed
+    - refunded
+    type: string
+    x-enum-varnames:
+    - PaymentPending
+    - PaymentCompleted
+    - PaymentFailed
+    - PaymentRefunded
+  internal_modules_plans.CreatePlanDTO:
+    properties:
+      annual_price:
+        example: 490
+        minimum: 0
+        type: number
+      currency:
+        example: USD
+        type: string
+      description:
+        example: Plan profesional con todas las funcionalidades
+        type: string
+      features:
+        example:
+        - Gestión de pacientes
+        - Historial clínico
+        - Facturación
+        items:
+          type: string
+        type: array
+      is_visible:
+        example: true
+        type: boolean
+      max_branches:
+        example: 3
+        minimum: 1
+        type: integer
+      max_users:
+        example: 10
+        minimum: 1
+        type: integer
+      monthly_price:
+        example: 49
+        minimum: 0
+        type: number
+      name:
+        example: Pro Plan
+        type: string
+      storage_limit_gb:
+        example: 10
+        minimum: 1
+        type: integer
+    required:
+    - annual_price
+    - currency
+    - max_branches
+    - max_users
+    - monthly_price
+    - name
+    - storage_limit_gb
+    type: object
+  internal_modules_plans.PlanResponse:
+    properties:
+      annual_price:
+        example: 490
+        type: number
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      currency:
+        example: USD
+        type: string
+      description:
+        example: Plan profesional
+        type: string
+      features:
+        example:
+        - Gestión de pacientes
+        - Historial clínico
+        items:
+          type: string
+        type: array
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      is_visible:
+        example: true
+        type: boolean
+      max_branches:
+        example: 3
+        type: integer
+      max_users:
+        example: 10
+        type: integer
+      monthly_price:
+        example: 49
+        type: number
+      name:
+        example: Pro Plan
+        type: string
+      storage_limit_gb:
+        example: 10
+        type: integer
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  internal_modules_plans.UpdatePlanDTO:
+    properties:
+      annual_price:
+        example: 490
+        type: number
+      description:
+        example: Plan profesional
+        type: string
+      features:
+        items:
+          type: string
+        type: array
+      is_visible:
+        type: boolean
+      max_branches:
+        example: 3
+        type: integer
+      max_users:
+        example: 10
+        type: integer
+      monthly_price:
+        example: 49
+        type: number
+      name:
+        example: Pro Plan
+        type: string
+      storage_limit_gb:
+        example: 10
+        type: integer
+    type: object
   internal_modules_tenant.CreateTenantDTO:
     properties:
+      address:
+        example: 'Calle 123 #45-67'
+        type: string
+      commercial_name:
+        example: Vet Vida
+        type: string
+      country:
+        example: Colombia
+        type: string
+      currency:
+        example: COP
+        type: string
+      domain:
+        description: Técnico
+        example: vetvida
+        type: string
+      email:
+        description: Contacto
+        example: contacto@vetvida.com
+        type: string
+      identification_number:
+        example: 900123456-7
+        type: string
+      industry:
+        example: veterinary
+        type: string
+      logo:
+        example: https://example.com/logo.png
+        type: string
       name:
-        description: Nombre del tenant
-        example: Mi Empresa
+        description: Información Básica
+        example: Clínica Vet Vida
         minLength: 2
         type: string
       owner_id:
         description: ID del propietario (referencia a users)
         example: 507f1f77bcf86cd799439011
         type: string
+      phone:
+        example: +57 300 123 4567
+        type: string
+      secondary_phone:
+        example: +57 300 987 6543
+        type: string
+      timezone:
+        example: America/Bogota
+        type: string
     required:
+    - address
+    - commercial_name
+    - country
+    - currency
+    - domain
+    - email
+    - identification_number
+    - industry
     - name
     - owner_id
+    - phone
+    - timezone
     type: object
   internal_modules_tenant.TenantResponse:
     properties:
+      address:
+        example: 'Calle 123 #45-67'
+        type: string
+      commercial_name:
+        example: Vet Vida
+        type: string
+      country:
+        example: Colombia
+        type: string
       created_at:
         example: "2024-01-01T00:00:00Z"
         type: string
+      currency:
+        example: COP
+        type: string
+      domain:
+        example: vetvida
+        type: string
+      email:
+        example: contacto@vetvida.com
+        type: string
       id:
-        description: ID del tenant
         example: 507f1f77bcf86cd799439011
+        type: string
+      identification_number:
+        example: 900123456-7
+        type: string
+      industry:
+        example: veterinary
+        type: string
+      logo:
+        example: https://example.com/logo.png
         type: string
       name:
-        description: Nombre del tenant
-        example: Mi Empresa
+        example: Clínica Vet Vida
         type: string
       owner_id:
-        description: ID del propietario
         example: 507f1f77bcf86cd799439011
+        type: string
+      phone:
+        example: +57 300 123 4567
+        type: string
+      secondary_phone:
+        example: +57 300 987 6543
         type: string
       status:
         allOf:
         - $ref: '#/definitions/internal_modules_tenant.TenantStatus'
-        description: Estado del tenant
         example: active
+      subscription:
+        $ref: '#/definitions/internal_modules_tenant.TenantSubscriptionResponse'
+      timezone:
+        example: America/Bogota
+        type: string
       updated_at:
         example: "2024-01-01T00:00:00Z"
         type: string
+      usage:
+        $ref: '#/definitions/internal_modules_tenant.TenantUsageResponse'
     type: object
   internal_modules_tenant.TenantStatus:
     enum:
     - active
     - inactive
+    - trial
+    - suspended
     type: string
     x-enum-varnames:
     - Active
     - Inactive
+    - Trial
+    - Suspended
+  internal_modules_tenant.TenantSubscriptionResponse:
+    properties:
+      billing_status:
+        type: string
+      external_subscription_id:
+        type: string
+      mrr:
+        type: number
+      payment_provider:
+        type: string
+      plan_id:
+        type: string
+      subscription_ends_at:
+        type: string
+      trial_ends_at:
+        type: string
+    type: object
+  internal_modules_tenant.TenantUsageResponse:
+    properties:
+      last_reset_date:
+        type: string
+      storage_limit_mb:
+        type: integer
+      storage_used_mb:
+        type: integer
+      users_count:
+        type: integer
+      users_limit:
+        type: integer
+    type: object
   internal_modules_tenant.UpdateTenantDTO:
     properties:
+      address:
+        example: 'Calle 123 #45-67'
+        type: string
+      commercial_name:
+        example: Vet Vida
+        type: string
+      country:
+        example: Colombia
+        type: string
+      currency:
+        example: COP
+        type: string
+      email:
+        example: contacto@vetvida.com
+        type: string
+      identification_number:
+        example: 900123456-7
+        type: string
+      industry:
+        example: veterinary
+        type: string
+      logo:
+        example: https://example.com/logo.png
+        type: string
       name:
-        example: Jane Doe
+        example: Clínica Vet Vida
+        type: string
+      phone:
+        example: +57 300 123 4567
+        type: string
+      secondary_phone:
+        example: +57 300 987 6543
+        type: string
+      timezone:
+        example: America/Bogota
         type: string
     type: object
   internal_modules_users.CreateUserDTO:
@@ -366,6 +753,241 @@ paths:
       summary: Registrar usuario
       tags:
       - auth
+  /payments:
+    post:
+      consumes:
+      - application/json
+      description: Registra un nuevo pago en el sistema
+      parameters:
+      - description: Datos del pago
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_payments.CreatePaymentDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_payments.PaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear pago
+      tags:
+      - payments
+  /payments/{id}:
+    get:
+      description: Obtiene un pago por ID
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_payments.PaymentResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener pago
+      tags:
+      - payments
+  /plans:
+    get:
+      description: Obtiene todos los planes (admin)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_plans.PlanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar planes
+      tags:
+      - plans
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo plan de suscripción
+      parameters:
+      - description: Datos del plan
+        in: body
+        name: plan
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_plans.CreatePlanDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_plans.PlanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear plan
+      tags:
+      - plans
+  /plans/{id}:
+    delete:
+      description: Elimina un plan
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar plan
+      tags:
+      - plans
+    get:
+      description: Obtiene un plan por ID
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_plans.PlanResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener plan
+      tags:
+      - plans
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un plan existente
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: plan
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_plans.UpdatePlanDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_plans.PlanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar plan
+      tags:
+      - plans
+  /plans/visible:
+    get:
+      description: Obtiene solo los planes visibles (público)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_plans.PlanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar planes visibles
+      tags:
+      - plans
   /tenants:
     get:
       consumes:
@@ -505,6 +1127,44 @@ paths:
       summary: Actualizar tenant
       tags:
       - tenant
+  /tenants/{tenant_id}/payments:
+    get:
+      description: Obtiene el historial de pagos de un tenant
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: tenant_id
+        required: true
+        type: string
+      - default: 50
+        description: Límite de resultados
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_payments.PaymentResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Historial de pagos de un tenant
+      tags:
+      - payments
   /users:
     get:
       consumes:
@@ -653,6 +1313,38 @@ paths:
       summary: Actualizar usuario
       tags:
       - users
+  /webhooks/{provider}:
+    post:
+      consumes:
+      - application/json
+      description: Endpoint para recibir webhooks de proveedores de pago
+      parameters:
+      - description: Provider name
+        enum:
+        - wompi
+        - stripe
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Procesar webhook de pago
+      tags:
+      - webhooks
 securityDefinitions:
   Bearer:
     description: 'Ingresa el token con el prefijo Bearer: Bearer <token>'

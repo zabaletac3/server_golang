@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/eren_dev/go_server/internal/config"
+	"github.com/eren_dev/go_server/internal/modules/plans"
 	"github.com/eren_dev/go_server/internal/modules/users"
 	"github.com/eren_dev/go_server/internal/shared/database"
 )
@@ -32,7 +33,8 @@ func main() {
 
 	// Crear repositorios y servicios
 	userRepo := users.NewRepository(db)
-	seedService := NewSeedService(userRepo, logger)
+	planRepo := plans.NewPlanRepository(db)
+	seedService := NewSeedService(userRepo, planRepo, logger)
 
 	// Ejecutar seeds
 	ctx := context.Background()

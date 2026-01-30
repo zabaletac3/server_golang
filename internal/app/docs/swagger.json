@@ -201,6 +201,362 @@
                 }
             }
         },
+        "/payments": {
+            "post": {
+                "description": "Registra un nuevo pago en el sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Crear pago",
+                "parameters": [
+                    {
+                        "description": "Datos del pago",
+                        "name": "payment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_payments.CreatePaymentDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/{id}": {
+            "get": {
+                "description": "Obtiene un pago por ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Obtener pago",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/plans": {
+            "get": {
+                "description": "Obtiene todos los planes (admin)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plans"
+                ],
+                "summary": "Listar planes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crea un nuevo plan de suscripción",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plans"
+                ],
+                "summary": "Crear plan",
+                "parameters": [
+                    {
+                        "description": "Datos del plan",
+                        "name": "plan",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_plans.CreatePlanDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/plans/visible": {
+            "get": {
+                "description": "Obtiene solo los planes visibles (público)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plans"
+                ],
+                "summary": "Listar planes visibles",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/plans/{id}": {
+            "get": {
+                "description": "Obtiene un plan por ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plans"
+                ],
+                "summary": "Obtener plan",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Elimina un plan",
+                "tags": [
+                    "plans"
+                ],
+                "summary": "Eliminar plan",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Actualiza un plan existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plans"
+                ],
+                "summary": "Actualizar plan",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "plan",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_plans.UpdatePlanDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/tenants": {
             "get": {
                 "description": "Obtiene una lista de tenants",
@@ -401,6 +757,63 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tenants/{tenant_id}/payments": {
+            "get": {
+                "description": "Obtiene el historial de pagos de un tenant",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Historial de pagos de un tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Límite de resultados",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -633,6 +1046,54 @@
                     }
                 }
             }
+        },
+        "/webhooks/{provider}": {
+            "post": {
+                "description": "Endpoint para recibir webhooks de proveedores de pago",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Procesar webhook de pago",
+                "parameters": [
+                    {
+                        "enum": [
+                            "wompi",
+                            "stripe"
+                        ],
+                        "type": "string",
+                        "description": "Provider name",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -787,56 +1248,134 @@
                 }
             }
         },
-        "internal_modules_tenant.CreateTenantDTO": {
+        "internal_modules_payments.CreatePaymentDTO": {
             "type": "object",
             "required": [
-                "name",
-                "owner_id"
+                "amount",
+                "concept",
+                "currency",
+                "payment_method",
+                "status",
+                "tenant_id"
             ],
             "properties": {
-                "name": {
-                    "description": "Nombre del tenant",
-                    "type": "string",
-                    "minLength": 2,
-                    "example": "Mi Empresa"
+                "amount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 4900
                 },
-                "owner_id": {
-                    "description": "ID del propietario (referencia a users)",
+                "concept": {
+                    "type": "string",
+                    "example": "Pago mensual - Plan Pro"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "external_transaction_id": {
+                    "type": "string",
+                    "example": "wompi_tx_123456"
+                },
+                "failure_reason": {
+                    "type": "string",
+                    "example": "Fondos insuficientes"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "wompi"
+                },
+                "period_end": {
+                    "type": "string",
+                    "example": "2024-02-01T00:00:00Z"
+                },
+                "period_start": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "processed_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/internal_modules_payments.PaymentStatus"
+                        }
+                    ],
+                    "example": "completed"
+                },
+                "tenant_id": {
                     "type": "string",
                     "example": "507f1f77bcf86cd799439011"
                 }
             }
         },
-        "internal_modules_tenant.TenantResponse": {
+        "internal_modules_payments.PaymentResponse": {
             "type": "object",
             "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 4900
+                },
+                "concept": {
+                    "type": "string",
+                    "example": "Pago mensual - Plan Pro"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "external_transaction_id": {
+                    "type": "string",
+                    "example": "wompi_tx_123456"
+                },
+                "failure_reason": {
+                    "type": "string",
+                    "example": "Fondos insuficientes"
+                },
                 "id": {
-                    "description": "ID del tenant",
                     "type": "string",
                     "example": "507f1f77bcf86cd799439011"
                 },
-                "name": {
-                    "description": "Nombre del tenant",
-                    "type": "string",
-                    "example": "Mi Empresa"
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
                 },
-                "owner_id": {
-                    "description": "ID del propietario",
+                "payment_method": {
                     "type": "string",
-                    "example": "507f1f77bcf86cd799439011"
+                    "example": "wompi"
+                },
+                "period_end": {
+                    "type": "string",
+                    "example": "2024-02-01T00:00:00Z"
+                },
+                "period_start": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "processed_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
                 },
                 "status": {
-                    "description": "Estado del tenant",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/internal_modules_tenant.TenantStatus"
+                            "$ref": "#/definitions/internal_modules_payments.PaymentStatus"
                         }
                     ],
-                    "example": "active"
+                    "example": "completed"
+                },
+                "tenant_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
                 },
                 "updated_at": {
                     "type": "string",
@@ -844,23 +1383,470 @@
                 }
             }
         },
+        "internal_modules_payments.PaymentStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "completed",
+                "failed",
+                "refunded"
+            ],
+            "x-enum-varnames": [
+                "PaymentPending",
+                "PaymentCompleted",
+                "PaymentFailed",
+                "PaymentRefunded"
+            ]
+        },
+        "internal_modules_plans.CreatePlanDTO": {
+            "type": "object",
+            "required": [
+                "annual_price",
+                "currency",
+                "max_branches",
+                "max_users",
+                "monthly_price",
+                "name",
+                "storage_limit_gb"
+            ],
+            "properties": {
+                "annual_price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 490
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Plan profesional con todas las funcionalidades"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Gestión de pacientes",
+                        "Historial clínico",
+                        "Facturación"
+                    ]
+                },
+                "is_visible": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_branches": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 3
+                },
+                "max_users": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 10
+                },
+                "monthly_price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 49
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pro Plan"
+                },
+                "storage_limit_gb": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 10
+                }
+            }
+        },
+        "internal_modules_plans.PlanResponse": {
+            "type": "object",
+            "properties": {
+                "annual_price": {
+                    "type": "number",
+                    "example": 490
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Plan profesional"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Gestión de pacientes",
+                        "Historial clínico"
+                    ]
+                },
+                "id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "is_visible": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_branches": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "max_users": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "monthly_price": {
+                    "type": "number",
+                    "example": 49
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pro Plan"
+                },
+                "storage_limit_gb": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "internal_modules_plans.UpdatePlanDTO": {
+            "type": "object",
+            "properties": {
+                "annual_price": {
+                    "type": "number",
+                    "example": 490
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Plan profesional"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "max_branches": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "max_users": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "monthly_price": {
+                    "type": "number",
+                    "example": 49
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pro Plan"
+                },
+                "storage_limit_gb": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "internal_modules_tenant.CreateTenantDTO": {
+            "type": "object",
+            "required": [
+                "address",
+                "commercial_name",
+                "country",
+                "currency",
+                "domain",
+                "email",
+                "identification_number",
+                "industry",
+                "name",
+                "owner_id",
+                "phone",
+                "timezone"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "Calle 123 #45-67"
+                },
+                "commercial_name": {
+                    "type": "string",
+                    "example": "Vet Vida"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Colombia"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "COP"
+                },
+                "domain": {
+                    "description": "Técnico",
+                    "type": "string",
+                    "example": "vetvida"
+                },
+                "email": {
+                    "description": "Contacto",
+                    "type": "string",
+                    "example": "contacto@vetvida.com"
+                },
+                "identification_number": {
+                    "type": "string",
+                    "example": "900123456-7"
+                },
+                "industry": {
+                    "type": "string",
+                    "example": "veterinary"
+                },
+                "logo": {
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                },
+                "name": {
+                    "description": "Información Básica",
+                    "type": "string",
+                    "minLength": 2,
+                    "example": "Clínica Vet Vida"
+                },
+                "owner_id": {
+                    "description": "ID del propietario (referencia a users)",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+57 300 123 4567"
+                },
+                "secondary_phone": {
+                    "type": "string",
+                    "example": "+57 300 987 6543"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "America/Bogota"
+                }
+            }
+        },
+        "internal_modules_tenant.TenantResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "Calle 123 #45-67"
+                },
+                "commercial_name": {
+                    "type": "string",
+                    "example": "Vet Vida"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Colombia"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "COP"
+                },
+                "domain": {
+                    "type": "string",
+                    "example": "vetvida"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "contacto@vetvida.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "identification_number": {
+                    "type": "string",
+                    "example": "900123456-7"
+                },
+                "industry": {
+                    "type": "string",
+                    "example": "veterinary"
+                },
+                "logo": {
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Clínica Vet Vida"
+                },
+                "owner_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+57 300 123 4567"
+                },
+                "secondary_phone": {
+                    "type": "string",
+                    "example": "+57 300 987 6543"
+                },
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/internal_modules_tenant.TenantStatus"
+                        }
+                    ],
+                    "example": "active"
+                },
+                "subscription": {
+                    "$ref": "#/definitions/internal_modules_tenant.TenantSubscriptionResponse"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "America/Bogota"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "usage": {
+                    "$ref": "#/definitions/internal_modules_tenant.TenantUsageResponse"
+                }
+            }
+        },
         "internal_modules_tenant.TenantStatus": {
             "type": "string",
             "enum": [
                 "active",
-                "inactive"
+                "inactive",
+                "trial",
+                "suspended"
             ],
             "x-enum-varnames": [
                 "Active",
-                "Inactive"
+                "Inactive",
+                "Trial",
+                "Suspended"
             ]
+        },
+        "internal_modules_tenant.TenantSubscriptionResponse": {
+            "type": "object",
+            "properties": {
+                "billing_status": {
+                    "type": "string"
+                },
+                "external_subscription_id": {
+                    "type": "string"
+                },
+                "mrr": {
+                    "type": "number"
+                },
+                "payment_provider": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "subscription_ends_at": {
+                    "type": "string"
+                },
+                "trial_ends_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_tenant.TenantUsageResponse": {
+            "type": "object",
+            "properties": {
+                "last_reset_date": {
+                    "type": "string"
+                },
+                "storage_limit_mb": {
+                    "type": "integer"
+                },
+                "storage_used_mb": {
+                    "type": "integer"
+                },
+                "users_count": {
+                    "type": "integer"
+                },
+                "users_limit": {
+                    "type": "integer"
+                }
+            }
         },
         "internal_modules_tenant.UpdateTenantDTO": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "Calle 123 #45-67"
+                },
+                "commercial_name": {
+                    "type": "string",
+                    "example": "Vet Vida"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Colombia"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "COP"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "contacto@vetvida.com"
+                },
+                "identification_number": {
+                    "type": "string",
+                    "example": "900123456-7"
+                },
+                "industry": {
+                    "type": "string",
+                    "example": "veterinary"
+                },
+                "logo": {
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                },
                 "name": {
                     "type": "string",
-                    "example": "Jane Doe"
+                    "example": "Clínica Vet Vida"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+57 300 123 4567"
+                },
+                "secondary_phone": {
+                    "type": "string",
+                    "example": "+57 300 987 6543"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "America/Bogota"
                 }
             }
         },

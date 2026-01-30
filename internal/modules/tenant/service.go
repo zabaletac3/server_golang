@@ -7,17 +7,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/eren_dev/go_server/internal/modules/users"
+	"github.com/eren_dev/go_server/internal/platform/payment"
 )
 
 type TenantService struct {
-	repo     TenantRepository
-	userRepo users.UserRepository
+	repo           TenantRepository
+	userRepo       users.UserRepository
+	paymentManager *payment.PaymentManager
 }
 
-func NewTenantService(repo TenantRepository, userRepo users.UserRepository) *TenantService {
+func NewTenantService(repo TenantRepository, userRepo users.UserRepository, paymentManager *payment.PaymentManager) *TenantService {
 	return &TenantService{
-		repo:     repo,
-		userRepo: userRepo,
+		repo:           repo,
+		userRepo:       userRepo,
+		paymentManager: paymentManager,
 	}
 }
 
@@ -37,11 +40,42 @@ func (s *TenantService) Create(ctx context.Context, dto *CreateTenantDTO) (*Tena
 	}
 
 	now := time.Now()
+	trialEndsAt := now.Add(14 * 24 * time.Hour) // 14 días de trial
+	
 	tenant := &Tenant{
-		ID:        primitive.NewObjectID(),
-		OwnerID:   ownerID,
-		Name:      dto.Name,
-		Status:    Active,
+		ID:                   primitive.NewObjectID(),
+		OwnerID:              ownerID,
+		Name:                 dto.Name,
+		CommercialName:       dto.CommercialName,
+		IdentificationNumber: dto.IdentificationNumber,
+		Industry:             dto.Industry,
+		Email:                dto.Email,
+		Phone:                dto.Phone,
+		SecondaryPhone:       dto.SecondaryPhone,
+		Address:              dto.Address,
+		Country:              dto.Country,
+		Domain:               dto.Domain,
+		TimeZone:             dto.TimeZone,
+		Currency:             dto.Currency,
+		Logo:                 dto.Logo,
+		Status:               Trial, // Inicia en trial
+		
+		// Inicializar suscripción con valores por defecto
+		Subscription: TenantSubscription{
+			BillingStatus: "trial",
+			TrialEndsAt:   &trialEndsAt,
+			MRR:           0,
+		},
+		
+		// Inicializar uso con límites básicos (plan free)
+		Usage: TenantUsage{
+			UsersCount:     1, // El owner cuenta como primer usuario
+			UsersLimit:     5,
+			StorageUsedMB:  0,
+			StorageLimitMB: 1000, // 1GB
+			LastResetDate:  now,
+		},
+		
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -74,9 +108,45 @@ func (s *TenantService) Update(ctx context.Context, id string, dto *UpdateTenant
 		return nil, err
 	}
 
+	// Actualizar campos si están presentes
 	if dto.Name != "" {
 		tenant.Name = dto.Name
 	}
+	if dto.CommercialName != "" {
+		tenant.CommercialName = dto.CommercialName
+	}
+	if dto.IdentificationNumber != "" {
+		tenant.IdentificationNumber = dto.IdentificationNumber
+	}
+	if dto.Industry != "" {
+		tenant.Industry = dto.Industry
+	}
+	if dto.Email != "" {
+		tenant.Email = dto.Email
+	}
+	if dto.Phone != "" {
+		tenant.Phone = dto.Phone
+	}
+	if dto.SecondaryPhone != "" {
+		tenant.SecondaryPhone = dto.SecondaryPhone
+	}
+	if dto.Address != "" {
+		tenant.Address = dto.Address
+	}
+	if dto.Country != "" {
+		tenant.Country = dto.Country
+	}
+	if dto.TimeZone != "" {
+		tenant.TimeZone = dto.TimeZone
+	}
+	if dto.Currency != "" {
+		tenant.Currency = dto.Currency
+	}
+	if dto.Logo != "" {
+		tenant.Logo = dto.Logo
+	}
+
+	tenant.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(ctx, tenant); err != nil {
 		return nil, err

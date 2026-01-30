@@ -8,17 +8,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/eren_dev/go_server/internal/modules/plans"
 	"github.com/eren_dev/go_server/internal/modules/users"
 )
 
 type SeedService struct {
 	userRepo users.UserRepository
+	planRepo plans.PlanRepository
 	logger   *slog.Logger
 }
 
-func NewSeedService(userRepo users.UserRepository, logger *slog.Logger) *SeedService {
+func NewSeedService(userRepo users.UserRepository, planRepo plans.PlanRepository, logger *slog.Logger) *SeedService {
 	return &SeedService{
 		userRepo: userRepo,
+		planRepo: planRepo,
 		logger:   logger,
 	}
 }
@@ -93,11 +96,98 @@ func (s *SeedService) SeedSuperAdmins(ctx context.Context) error {
 	return nil
 }
 
+func (s *SeedService) SeedPlans(ctx context.Context) error {
+	initialPlans := []plans.Plan{
+		{
+			Name:           "Básico",
+			Description:    "Plan ideal para pequeños consultorios y veterinarios independientes.",
+			MonthlyPrice:   0, // Gratis por ahora o bajo costo
+			AnnualPrice:    0,
+			Currency:       "COP",
+			MaxUsers:       1,
+			MaxBranches:    1,
+			StorageLimitGB: 1,
+			Features: []string{
+				"Gestión de pacientes básica",
+				"Historias clínicas ilimitadas",
+				"Agenda de citas",
+			},
+			IsVisible: true,
+		},
+		{
+			Name:           "Pro",
+			Description:    "Para clínicas en crecimiento que necesitan más control y usuarios.",
+			MonthlyPrice:   4900000, // $49.000 COP (en centavos) -> Ajustar según lógica de precios
+			AnnualPrice:    49000000, // $490.000 COP
+			Currency:       "COP",
+			MaxUsers:       5,
+			MaxBranches:    1,
+			StorageLimitGB: 10,
+			Features: []string{
+				"Todo lo del plan Básico",
+				"Múltiples usuarios",
+				"Recordatorios por WhatsApp",
+				"Facturación electrónica básica",
+				"Reportes financieros",
+			},
+			IsVisible: true,
+		},
+		{
+			Name:           "Empresarial",
+			Description:    "Solución completa para hospitales veterinarios y cadenas.",
+			MonthlyPrice:   14900000, // $149.000 COP
+			AnnualPrice:    149000000, // $1.490.000 COP
+			Currency:       "COP",
+			MaxUsers:       20,
+			MaxBranches:    3,
+			StorageLimitGB: 50,
+			Features: []string{
+				"Todo lo del plan Pro",
+				"Múltiples sedes",
+				"Roles y permisos avanzados",
+				"API de integración",
+				"Soporte prioritario 24/7",
+			},
+			IsVisible: true,
+		},
+	}
+
+	// Verificar si ya existen planes, si no, crearlos
+	existingPlans, err := s.planRepo.FindAll(ctx)
+	if err != nil {
+		s.logger.Error("failed to list plans", "error", err)
+		return err
+	}
+
+	if len(existingPlans) > 0 {
+		s.logger.Info("plans already exist, skipping seed")
+		return nil
+	}
+
+	for _, p := range initialPlans {
+		p.ID = primitive.NewObjectID()
+		p.CreatedAt = time.Now()
+		p.UpdatedAt = time.Now()
+
+		if err := s.planRepo.Create(ctx, &p); err != nil {
+			s.logger.Error("failed to create plan", "name", p.Name, "error", err)
+			return err
+		}
+		s.logger.Info("plan created successfully", "name", p.Name)
+	}
+
+	return nil
+}
+
 // RunSeeds ejecuta todos los seeds
 func (s *SeedService) RunSeeds(ctx context.Context) error {
 	s.logger.Info("starting database seeding...")
 
 	if err := s.SeedSuperAdmins(ctx); err != nil {
+		return err
+	}
+
+	if err := s.SeedPlans(ctx); err != nil {
 		return err
 	}
 

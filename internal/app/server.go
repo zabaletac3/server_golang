@@ -10,6 +10,7 @@ import (
 	"github.com/eren_dev/go_server/internal/app/docs"
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/health"
+	"github.com/eren_dev/go_server/internal/platform/payment"
 	"github.com/eren_dev/go_server/internal/shared/database"
 	"github.com/eren_dev/go_server/internal/shared/httpx"
 	"github.com/eren_dev/go_server/internal/shared/middleware"
@@ -19,7 +20,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func NewServer(cfg *config.Config, db *database.MongoDB) (*Server, error) {
+func NewServer(cfg *config.Config, db *database.MongoDB, paymentManager *payment.PaymentManager) (*Server, error) {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.New()
@@ -45,7 +46,7 @@ func NewServer(cfg *config.Config, db *database.MongoDB) (*Server, error) {
 	router.GET("/docs/openapi.json", docs.SwaggerJSONHandler())
 
 	health.RegisterRoutes(router)
-	registerRoutes(router, db, cfg)
+	registerRoutes(router, db, cfg, paymentManager)
 
 	return &Server{
 		httpServer: &http.Server{
