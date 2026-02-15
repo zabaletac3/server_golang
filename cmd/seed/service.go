@@ -8,21 +8,37 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/eren_dev/go_server/internal/modules/permissions"
 	"github.com/eren_dev/go_server/internal/modules/plans"
+	"github.com/eren_dev/go_server/internal/modules/resources"
+	"github.com/eren_dev/go_server/internal/modules/roles"
 	"github.com/eren_dev/go_server/internal/modules/users"
 )
 
 type SeedService struct {
-	userRepo users.UserRepository
-	planRepo plans.PlanRepository
-	logger   *slog.Logger
+	userRepo       users.UserRepository
+	planRepo       plans.PlanRepository
+	resourceRepo   resources.ResourceRepository
+	permissionRepo permissions.PermissionRepository
+	roleRepo       roles.RoleRepository
+	logger         *slog.Logger
 }
 
-func NewSeedService(userRepo users.UserRepository, planRepo plans.PlanRepository, logger *slog.Logger) *SeedService {
+func NewSeedService(
+	userRepo users.UserRepository,
+	planRepo plans.PlanRepository,
+	resourceRepo resources.ResourceRepository,
+	permissionRepo permissions.PermissionRepository,
+	roleRepo roles.RoleRepository,
+	logger *slog.Logger,
+) *SeedService {
 	return &SeedService{
-		userRepo: userRepo,
-		planRepo: planRepo,
-		logger:   logger,
+		userRepo:       userRepo,
+		planRepo:       planRepo,
+		resourceRepo:   resourceRepo,
+		permissionRepo: permissionRepo,
+		roleRepo:       roleRepo,
+		logger:         logger,
 	}
 }
 
@@ -188,6 +204,10 @@ func (s *SeedService) RunSeeds(ctx context.Context) error {
 	}
 
 	if err := s.SeedPlans(ctx); err != nil {
+		return err
+	}
+
+	if err := s.SeedRBAC(ctx); err != nil {
 		return err
 	}
 

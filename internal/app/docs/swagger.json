@@ -221,7 +221,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_payments.CreatePaymentDTO"
+                            "$ref": "#/definitions/CreatePaymentDTO"
                         }
                     }
                 ],
@@ -229,7 +229,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
+                            "$ref": "#/definitions/PaymentResponse"
                         }
                     },
                     "400": {
@@ -273,7 +273,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
+                            "$ref": "#/definitions/PaymentResponse"
                         }
                     },
                     "404": {
@@ -287,6 +287,299 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Obtiene una lista paginada de permisos",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Listar permisos",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": " ",
+                        "name": "skip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": " ",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PaginatedPermissionsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Crea un nuevo permiso (combinación recurso + acción)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Crear permiso",
+                "parameters": [
+                    {
+                        "description": "Datos del permiso",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreatePermissionDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PermissionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Permiso ya existe",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/permissions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Obtiene un permiso por su ID con el recurso poblado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Obtener permiso",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Permission ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PermissionResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Elimina un permiso por su ID (soft delete)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Eliminar permiso",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Permission ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Actualiza la acción de un permiso existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Actualizar permiso",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Permission ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdatePermissionDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PermissionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -313,7 +606,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                                "$ref": "#/definitions/PlanResponse"
                             }
                         }
                     },
@@ -347,7 +640,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_plans.CreatePlanDTO"
+                            "$ref": "#/definitions/CreatePlanDTO"
                         }
                     }
                 ],
@@ -355,7 +648,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                            "$ref": "#/definitions/PlanResponse"
                         }
                     },
                     "400": {
@@ -392,7 +685,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                                "$ref": "#/definitions/PlanResponse"
                             }
                         }
                     },
@@ -431,7 +724,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                            "$ref": "#/definitions/PlanResponse"
                         }
                     },
                     "404": {
@@ -519,7 +812,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_plans.UpdatePlanDTO"
+                            "$ref": "#/definitions/UpdatePlanDTO"
                         }
                     }
                 ],
@@ -527,7 +820,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
+                            "$ref": "#/definitions/PlanResponse"
                         }
                     },
                     "400": {
@@ -557,6 +850,592 @@
                 }
             }
         },
+        "/resources": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Obtiene una lista paginada de recursos",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resources"
+                ],
+                "summary": "Listar recursos",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": " ",
+                        "name": "skip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": " ",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PaginatedResourcesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Crea un nuevo recurso del sistema (debe coincidir con el segmento de ruta)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resources"
+                ],
+                "summary": "Crear recurso",
+                "parameters": [
+                    {
+                        "description": "Datos del recurso",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateResourceDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ResourceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Nombre ya existe",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Obtiene un recurso por su ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resources"
+                ],
+                "summary": "Obtener recurso",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ResourceResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Elimina un recurso por su ID (soft delete)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resources"
+                ],
+                "summary": "Eliminar recurso",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Actualiza un recurso existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resources"
+                ],
+                "summary": "Actualizar recurso",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateResourceDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ResourceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/roles": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Obtiene una lista paginada de roles con permisos y recursos poblados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Listar roles",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": " ",
+                        "name": "skip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": " ",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PaginatedRolesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Crea un nuevo rol con permisos y recursos asignados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Crear rol",
+                "parameters": [
+                    {
+                        "description": "Datos del rol",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateRoleDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Nombre ya existe",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Obtiene un rol por su ID con permisos y recursos poblados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Obtener rol",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RoleResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Elimina un rol por su ID (soft delete)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Eliminar rol",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Actualiza un rol, sus permisos y/o recursos asignados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Actualizar rol",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateRoleDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RoleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationError"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/tenants": {
             "get": {
                 "description": "Obtiene una lista de tenants",
@@ -576,7 +1455,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
+                                "$ref": "#/definitions/TenantResponse"
                             }
                         }
                     }
@@ -601,7 +1480,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_tenant.CreateTenantDTO"
+                            "$ref": "#/definitions/CreateTenantDTO"
                         }
                     }
                 ],
@@ -609,7 +1488,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
+                            "$ref": "#/definitions/TenantResponse"
                         }
                     },
                     "400": {
@@ -656,7 +1535,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
+                            "$ref": "#/definitions/TenantResponse"
                         }
                     },
                     "404": {
@@ -738,7 +1617,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_tenant.UpdateTenantDTO"
+                            "$ref": "#/definitions/UpdateTenantDTO"
                         }
                     }
                 ],
@@ -746,7 +1625,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
+                            "$ref": "#/definitions/TenantResponse"
                         }
                     },
                     "400": {
@@ -799,7 +1678,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
+                                "$ref": "#/definitions/PaymentResponse"
                             }
                         }
                     },
@@ -826,6 +1705,11 @@
         },
         "/users": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Obtiene una lista paginada de usuarios",
                 "consumes": [
                     "application/json"
@@ -859,10 +1743,24 @@
                         "schema": {
                             "$ref": "#/definitions/PaginatedUsersResponse"
                         }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Crea un nuevo usuario en el sistema",
                 "consumes": [
                     "application/json"
@@ -898,8 +1796,17 @@
                             "$ref": "#/definitions/ValidationError"
                         }
                     },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "409": {
-                        "description": "Conflict",
+                        "description": "Email ya existe",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -912,6 +1819,11 @@
         },
         "/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Obtiene un usuario por su ID",
                 "consumes": [
                     "application/json"
@@ -939,8 +1851,17 @@
                             "$ref": "#/definitions/UserResponse"
                         }
                     },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "404": {
-                        "description": "Not Found",
+                        "description": "No encontrado",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -951,6 +1872,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Elimina un usuario por su ID",
                 "consumes": [
                     "application/json"
@@ -981,8 +1907,17 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "404": {
-                        "description": "Not Found",
+                        "description": "No encontrado",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -993,6 +1928,11 @@
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Actualiza un usuario existente",
                 "consumes": [
                     "application/json"
@@ -1035,8 +1975,17 @@
                             "$ref": "#/definitions/ValidationError"
                         }
                     },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "404": {
-                        "description": "Not Found",
+                        "description": "No encontrado",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1248,7 +2197,7 @@
                 }
             }
         },
-        "internal_modules_payments.CreatePaymentDTO": {
+        "CreatePaymentDTO": {
             "type": "object",
             "required": [
                 "amount",
@@ -1303,7 +2252,7 @@
                 "status": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/internal_modules_payments.PaymentStatus"
+                            "$ref": "#/definitions/PaymentStatus"
                         }
                     ],
                     "example": "completed"
@@ -1314,7 +2263,7 @@
                 }
             }
         },
-        "internal_modules_payments.PaymentResponse": {
+        "PaymentResponse": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -1368,7 +2317,7 @@
                 "status": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/internal_modules_payments.PaymentStatus"
+                            "$ref": "#/definitions/PaymentStatus"
                         }
                     ],
                     "example": "completed"
@@ -1383,7 +2332,7 @@
                 }
             }
         },
-        "internal_modules_payments.PaymentStatus": {
+        "PaymentStatus": {
             "type": "string",
             "enum": [
                 "pending",
@@ -1398,7 +2347,134 @@
                 "PaymentRefunded"
             ]
         },
-        "internal_modules_plans.CreatePlanDTO": {
+        "Action": {
+            "type": "string",
+            "enum": [
+                "get",
+                "post",
+                "put",
+                "patch",
+                "delete"
+            ],
+            "x-enum-varnames": [
+                "ActionGet",
+                "ActionPost",
+                "ActionPut",
+                "ActionPatch",
+                "ActionDelete"
+            ]
+        },
+        "CreatePermissionDTO": {
+            "type": "object",
+            "required": [
+                "action",
+                "resource_id",
+                "tenant_id"
+            ],
+            "properties": {
+                "action": {
+                    "description": "Acción permitida: get, post, put, patch, delete",
+                    "type": "string",
+                    "example": "get"
+                },
+                "resource_id": {
+                    "description": "ID del recurso asociado",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "tenant_id": {
+                    "description": "ID del tenant al que pertenece",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "PaginatedPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Lista de permisos",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PermissionResponse"
+                    }
+                },
+                "pagination": {
+                    "description": "Información de paginación",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PaginationInfo"
+                        }
+                    ]
+                }
+            }
+        },
+        "PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "Acción permitida",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/Action"
+                        }
+                    ],
+                    "example": "get"
+                },
+                "created_at": {
+                    "description": "Fecha de creación",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID único del permiso",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "resource": {
+                    "description": "Recurso asociado (poblado)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResourceRef"
+                        }
+                    ]
+                },
+                "tenant_id": {
+                    "description": "ID del tenant",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "updated_at": {
+                    "description": "Fecha de actualización",
+                    "type": "string"
+                }
+            }
+        },
+        "ResourceRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID del recurso",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "name": {
+                    "description": "Nombre del recurso",
+                    "type": "string",
+                    "example": "appointments"
+                }
+            }
+        },
+        "UpdatePermissionDTO": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "Acción permitida: get, post, put, patch, delete",
+                    "type": "string",
+                    "example": "post"
+                }
+            }
+        },
+        "CreatePlanDTO": {
             "type": "object",
             "required": [
                 "annual_price",
@@ -1464,7 +2540,7 @@
                 }
             }
         },
-        "internal_modules_plans.PlanResponse": {
+        "PlanResponse": {
             "type": "object",
             "properties": {
                 "annual_price": {
@@ -1527,7 +2603,7 @@
                 }
             }
         },
-        "internal_modules_plans.UpdatePlanDTO": {
+        "UpdatePlanDTO": {
             "type": "object",
             "properties": {
                 "annual_price": {
@@ -1569,7 +2645,284 @@
                 }
             }
         },
-        "internal_modules_tenant.CreateTenantDTO": {
+        "CreateResourceDTO": {
+            "type": "object",
+            "required": [
+                "name",
+                "tenant_id"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Descripción del recurso",
+                    "type": "string",
+                    "example": "Módulo de citas veterinarias"
+                },
+                "name": {
+                    "description": "Nombre del recurso (debe coincidir con el segmento de ruta, ej: appointments)",
+                    "type": "string",
+                    "minLength": 2,
+                    "example": "appointments"
+                },
+                "tenant_id": {
+                    "description": "ID del tenant al que pertenece",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "PaginatedResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Lista de recursos",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ResourceResponse"
+                    }
+                },
+                "pagination": {
+                    "description": "Información de paginación",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PaginationInfo"
+                        }
+                    ]
+                }
+            }
+        },
+        "ResourceResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "Fecha de creación",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Descripción del recurso",
+                    "type": "string",
+                    "example": "Módulo de citas veterinarias"
+                },
+                "id": {
+                    "description": "ID único del recurso",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "name": {
+                    "description": "Nombre del recurso",
+                    "type": "string",
+                    "example": "appointments"
+                },
+                "tenant_id": {
+                    "description": "ID del tenant",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "updated_at": {
+                    "description": "Fecha de actualización",
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateResourceDTO": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Descripción del recurso",
+                    "type": "string",
+                    "example": "Módulo de citas veterinarias"
+                },
+                "name": {
+                    "description": "Nombre del recurso",
+                    "type": "string",
+                    "example": "appointments"
+                }
+            }
+        },
+        "CreateRoleDTO": {
+            "type": "object",
+            "required": [
+                "name",
+                "tenant_id"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Descripción del rol",
+                    "type": "string",
+                    "example": "Rol para veterinarios"
+                },
+                "name": {
+                    "description": "Nombre del rol",
+                    "type": "string",
+                    "minLength": 2,
+                    "example": "veterinary"
+                },
+                "permissions_ids": {
+                    "description": "IDs de permisos asignados (pares recurso+acción)",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "507f1f77bcf86cd799439011"
+                    ]
+                },
+                "resources_ids": {
+                    "description": "IDs de recursos accesibles por este rol",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "507f1f77bcf86cd799439011"
+                    ]
+                },
+                "tenant_id": {
+                    "description": "ID del tenant al que pertenece",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "PaginatedRolesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Lista de roles",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RoleResponse"
+                    }
+                },
+                "pagination": {
+                    "description": "Información de paginación",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PaginationInfo"
+                        }
+                    ]
+                }
+            }
+        },
+        "PermissionRef": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "Acción permitida",
+                    "type": "string",
+                    "example": "get"
+                },
+                "id": {
+                    "description": "ID del permiso",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "resource": {
+                    "description": "Recurso asociado",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResourceRef"
+                        }
+                    ]
+                }
+            }
+        },
+        "ResourceRef": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Descripción",
+                    "type": "string",
+                    "example": "Módulo de citas"
+                },
+                "id": {
+                    "description": "ID del recurso",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "name": {
+                    "description": "Nombre del recurso",
+                    "type": "string",
+                    "example": "appointments"
+                }
+            }
+        },
+        "RoleResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "Fecha de creación",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Descripción del rol",
+                    "type": "string",
+                    "example": "Rol para veterinarios"
+                },
+                "id": {
+                    "description": "ID único del rol",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "name": {
+                    "description": "Nombre del rol",
+                    "type": "string",
+                    "example": "veterinary"
+                },
+                "permissions": {
+                    "description": "Permisos poblados (recurso + acción)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PermissionRef"
+                    }
+                },
+                "resources": {
+                    "description": "Recursos accesibles poblados",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ResourceRef"
+                    }
+                },
+                "tenant_id": {
+                    "description": "ID del tenant",
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "updated_at": {
+                    "description": "Fecha de actualización",
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateRoleDTO": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Descripción del rol",
+                    "type": "string",
+                    "example": "Rol para veterinarios"
+                },
+                "name": {
+                    "description": "Nombre del rol",
+                    "type": "string",
+                    "example": "veterinary"
+                },
+                "permissions_ids": {
+                    "description": "IDs de permisos asignados",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "resources_ids": {
+                    "description": "IDs de recursos accesibles",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "CreateTenantDTO": {
             "type": "object",
             "required": [
                 "address",
@@ -1649,7 +3002,7 @@
                 }
             }
         },
-        "internal_modules_tenant.TenantResponse": {
+        "TenantResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -1715,13 +3068,13 @@
                 "status": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/internal_modules_tenant.TenantStatus"
+                            "$ref": "#/definitions/TenantStatus"
                         }
                     ],
                     "example": "active"
                 },
                 "subscription": {
-                    "$ref": "#/definitions/internal_modules_tenant.TenantSubscriptionResponse"
+                    "$ref": "#/definitions/TenantSubscriptionResponse"
                 },
                 "timezone": {
                     "type": "string",
@@ -1732,11 +3085,11 @@
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "usage": {
-                    "$ref": "#/definitions/internal_modules_tenant.TenantUsageResponse"
+                    "$ref": "#/definitions/TenantUsageResponse"
                 }
             }
         },
-        "internal_modules_tenant.TenantStatus": {
+        "TenantStatus": {
             "type": "string",
             "enum": [
                 "active",
@@ -1751,7 +3104,7 @@
                 "Suspended"
             ]
         },
-        "internal_modules_tenant.TenantSubscriptionResponse": {
+        "TenantSubscriptionResponse": {
             "type": "object",
             "properties": {
                 "billing_status": {
@@ -1777,7 +3130,7 @@
                 }
             }
         },
-        "internal_modules_tenant.TenantUsageResponse": {
+        "TenantUsageResponse": {
             "type": "object",
             "properties": {
                 "last_reset_date": {
@@ -1797,7 +3150,7 @@
                 }
             }
         },
-        "internal_modules_tenant.UpdateTenantDTO": {
+        "UpdateTenantDTO": {
             "type": "object",
             "properties": {
                 "address": {

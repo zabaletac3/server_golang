@@ -44,6 +44,13 @@ func FromError(err error) (int, ErrorResponse) {
 		}
 	}
 
+	if strings.Contains(errMsg, "forbidden") || strings.Contains(errMsg, "access denied") {
+		return http.StatusForbidden, ErrorResponse{
+			Code:    "FORBIDDEN",
+			Message: errMsg,
+		}
+	}
+
 	if strings.Contains(errMsg, "token") && (strings.Contains(errMsg, "invalid") || strings.Contains(errMsg, "expired")) {
 		return http.StatusUnauthorized, ErrorResponse{
 			Code:    "UNAUTHORIZED",
@@ -87,6 +94,12 @@ func FromError(err error) (int, ErrorResponse) {
 		return http.StatusConflict, ErrorResponse{
 			Code:    "CONFLICT",
 			Message: errMsg,
+		}
+
+	case errors.Is(err, sharedErrors.ErrForbidden):
+		return http.StatusForbidden, ErrorResponse{
+			Code:    "FORBIDDEN",
+			Message: "access denied",
 		}
 
 	default:

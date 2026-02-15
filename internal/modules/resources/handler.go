@@ -1,4 +1,4 @@
-package users
+package resources
 
 import (
 	"github.com/gin-gonic/gin"
@@ -16,104 +16,99 @@ func NewHandler(service *Service) *Handler {
 }
 
 // Create godoc
-// @Summary      Crear usuario
-// @Description  Crea un nuevo usuario en el sistema
-// @Tags         users
+// @Summary      Crear recurso
+// @Description  Crea un nuevo recurso del sistema (debe coincidir con el segmento de ruta)
+// @Tags         resources
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        body  body      CreateUserDTO  true  "Datos del usuario"
-// @Success      200   {object}  UserResponse
+// @Param        body  body      CreateResourceDTO  true  "Datos del recurso"
+// @Success      200   {object}  ResourceResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      401   {object}  map[string]string "No autorizado"
-// @Failure      409   {object}  map[string]string "Email ya existe"
-// @Router       /users [post]
+// @Failure      409   {object}  map[string]string "Nombre ya existe"
+// @Router       /resources [post]
 func (h *Handler) Create(c *gin.Context) (any, error) {
-	var dto CreateUserDTO
+	var dto CreateResourceDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		return nil, validation.Validate(err)
 	}
-
 	return h.service.Create(c.Request.Context(), &dto)
 }
 
 // FindAll godoc
-// @Summary      Listar usuarios
-// @Description  Obtiene una lista paginada de usuarios
-// @Tags         users
+// @Summary      Listar recursos
+// @Description  Obtiene una lista paginada de recursos
+// @Tags         resources
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
 // @Param        skip   query     int  false  " "  default(0)
 // @Param        limit  query     int  false  " "  default(10)
-// @Success      200    {object}  PaginatedUsersResponse
+// @Success      200    {object}  PaginatedResourcesResponse
 // @Failure      401    {object}  map[string]string "No autorizado"
-// @Router       /users [get]
+// @Router       /resources [get]
 func (h *Handler) FindAll(c *gin.Context) (any, error) {
 	params := pagination.FromContext(c)
 	return h.service.FindAll(c.Request.Context(), params)
 }
 
 // FindByID godoc
-// @Summary      Obtener usuario
-// @Description  Obtiene un usuario por su ID
-// @Tags         users
+// @Summary      Obtener recurso
+// @Description  Obtiene un recurso por su ID
+// @Tags         resources
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        id   path      string  true  "User ID"
-// @Success      200  {object}  UserResponse
+// @Param        id   path      string  true  "Resource ID"
+// @Success      200  {object}  ResourceResponse
 // @Failure      401  {object}  map[string]string "No autorizado"
 // @Failure      404  {object}  map[string]string "No encontrado"
-// @Router       /users/{id} [get]
+// @Router       /resources/{id} [get]
 func (h *Handler) FindByID(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	return h.service.FindByID(c.Request.Context(), id)
 }
 
 // Update godoc
-// @Summary      Actualizar usuario
-// @Description  Actualiza un usuario existente
-// @Tags         users
+// @Summary      Actualizar recurso
+// @Description  Actualiza un recurso existente
+// @Tags         resources
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        id    path      string         true  "User ID"
-// @Param        body  body      UpdateUserDTO  true  "Datos a actualizar"
-// @Success      200   {object}  UserResponse
+// @Param        id    path      string             true  "Resource ID"
+// @Param        body  body      UpdateResourceDTO  true  "Datos a actualizar"
+// @Success      200   {object}  ResourceResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      401   {object}  map[string]string "No autorizado"
 // @Failure      404   {object}  map[string]string "No encontrado"
-// @Router       /users/{id} [patch]
+// @Router       /resources/{id} [patch]
 func (h *Handler) Update(c *gin.Context) (any, error) {
 	id := c.Param("id")
-
-	var dto UpdateUserDTO
+	var dto UpdateResourceDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		return nil, validation.Validate(err)
 	}
-
 	return h.service.Update(c.Request.Context(), id, &dto)
 }
 
 // Delete godoc
-// @Summary      Eliminar usuario
-// @Description  Elimina un usuario por su ID
-// @Tags         users
+// @Summary      Eliminar recurso
+// @Description  Elimina un recurso por su ID (soft delete)
+// @Tags         resources
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        id   path      string  true  "User ID"
+// @Param        id   path      string  true  "Resource ID"
 // @Success      200  {object}  map[string]bool
 // @Failure      401  {object}  map[string]string "No autorizado"
 // @Failure      404  {object}  map[string]string "No encontrado"
-// @Router       /users/{id} [delete]
+// @Router       /resources/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) (any, error) {
 	id := c.Param("id")
-
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {
 		return nil, err
 	}
-
 	return gin.H{"deleted": true}, nil
 }

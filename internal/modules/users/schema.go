@@ -13,6 +13,7 @@ type User struct {
 	Phone     string             `bson:"phone"`
 	Password  string             `bson:"password,omitempty"`
 	TenantIds []primitive.ObjectID `bson:"tenant_ids"`
+	RoleIds      []primitive.ObjectID `bson:"role_ids"`
 	IsSuperAdmin bool             `bson:"is_super_admin"`
 	CreatedAt time.Time          `bson:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at"`

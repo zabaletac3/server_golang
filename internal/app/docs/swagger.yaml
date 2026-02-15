@@ -221,6 +221,95 @@ definitions:
     - PaymentCompleted
     - PaymentFailed
     - PaymentRefunded
+  internal_modules_permissions.Action:
+    enum:
+    - get
+    - post
+    - put
+    - patch
+    - delete
+    type: string
+    x-enum-varnames:
+    - ActionGet
+    - ActionPost
+    - ActionPut
+    - ActionPatch
+    - ActionDelete
+  internal_modules_permissions.CreatePermissionDTO:
+    properties:
+      action:
+        description: 'Acción permitida: get, post, put, patch, delete'
+        example: get
+        type: string
+      resource_id:
+        description: ID del recurso asociado
+        example: 507f1f77bcf86cd799439011
+        type: string
+      tenant_id:
+        description: ID del tenant al que pertenece
+        example: 507f1f77bcf86cd799439011
+        type: string
+    required:
+    - action
+    - resource_id
+    - tenant_id
+    type: object
+  internal_modules_permissions.PaginatedPermissionsResponse:
+    properties:
+      data:
+        description: Lista de permisos
+        items:
+          $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
+        type: array
+      pagination:
+        allOf:
+        - $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo'
+        description: Información de paginación
+    type: object
+  internal_modules_permissions.PermissionResponse:
+    properties:
+      action:
+        allOf:
+        - $ref: '#/definitions/internal_modules_permissions.Action'
+        description: Acción permitida
+        example: get
+      created_at:
+        description: Fecha de creación
+        type: string
+      id:
+        description: ID único del permiso
+        example: 507f1f77bcf86cd799439011
+        type: string
+      resource:
+        allOf:
+        - $ref: '#/definitions/internal_modules_permissions.ResourceRef'
+        description: Recurso asociado (poblado)
+      tenant_id:
+        description: ID del tenant
+        example: 507f1f77bcf86cd799439011
+        type: string
+      updated_at:
+        description: Fecha de actualización
+        type: string
+    type: object
+  internal_modules_permissions.ResourceRef:
+    properties:
+      id:
+        description: ID del recurso
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        description: Nombre del recurso
+        example: appointments
+        type: string
+    type: object
+  internal_modules_permissions.UpdatePermissionDTO:
+    properties:
+      action:
+        description: 'Acción permitida: get, post, put, patch, delete'
+        example: post
+        type: string
+    type: object
   internal_modules_plans.CreatePlanDTO:
     properties:
       annual_price:
@@ -347,6 +436,205 @@ definitions:
       storage_limit_gb:
         example: 10
         type: integer
+    type: object
+  internal_modules_resources.CreateResourceDTO:
+    properties:
+      description:
+        description: Descripción del recurso
+        example: Módulo de citas veterinarias
+        type: string
+      name:
+        description: 'Nombre del recurso (debe coincidir con el segmento de ruta,
+          ej: appointments)'
+        example: appointments
+        minLength: 2
+        type: string
+      tenant_id:
+        description: ID del tenant al que pertenece
+        example: 507f1f77bcf86cd799439011
+        type: string
+    required:
+    - name
+    - tenant_id
+    type: object
+  internal_modules_resources.PaginatedResourcesResponse:
+    properties:
+      data:
+        description: Lista de recursos
+        items:
+          $ref: '#/definitions/internal_modules_resources.ResourceResponse'
+        type: array
+      pagination:
+        allOf:
+        - $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo'
+        description: Información de paginación
+    type: object
+  internal_modules_resources.ResourceResponse:
+    properties:
+      created_at:
+        description: Fecha de creación
+        type: string
+      description:
+        description: Descripción del recurso
+        example: Módulo de citas veterinarias
+        type: string
+      id:
+        description: ID único del recurso
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        description: Nombre del recurso
+        example: appointments
+        type: string
+      tenant_id:
+        description: ID del tenant
+        example: 507f1f77bcf86cd799439011
+        type: string
+      updated_at:
+        description: Fecha de actualización
+        type: string
+    type: object
+  internal_modules_resources.UpdateResourceDTO:
+    properties:
+      description:
+        description: Descripción del recurso
+        example: Módulo de citas veterinarias
+        type: string
+      name:
+        description: Nombre del recurso
+        example: appointments
+        type: string
+    type: object
+  internal_modules_roles.CreateRoleDTO:
+    properties:
+      description:
+        description: Descripción del rol
+        example: Rol para veterinarios
+        type: string
+      name:
+        description: Nombre del rol
+        example: veterinary
+        minLength: 2
+        type: string
+      permissions_ids:
+        description: IDs de permisos asignados (pares recurso+acción)
+        example:
+        - 507f1f77bcf86cd799439011
+        items:
+          type: string
+        type: array
+      resources_ids:
+        description: IDs de recursos accesibles por este rol
+        example:
+        - 507f1f77bcf86cd799439011
+        items:
+          type: string
+        type: array
+      tenant_id:
+        description: ID del tenant al que pertenece
+        example: 507f1f77bcf86cd799439011
+        type: string
+    required:
+    - name
+    - tenant_id
+    type: object
+  internal_modules_roles.PaginatedRolesResponse:
+    properties:
+      data:
+        description: Lista de roles
+        items:
+          $ref: '#/definitions/internal_modules_roles.RoleResponse'
+        type: array
+      pagination:
+        allOf:
+        - $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo'
+        description: Información de paginación
+    type: object
+  internal_modules_roles.PermissionRef:
+    properties:
+      action:
+        description: Acción permitida
+        example: get
+        type: string
+      id:
+        description: ID del permiso
+        example: 507f1f77bcf86cd799439011
+        type: string
+      resource:
+        allOf:
+        - $ref: '#/definitions/internal_modules_roles.ResourceRef'
+        description: Recurso asociado
+    type: object
+  internal_modules_roles.ResourceRef:
+    properties:
+      description:
+        description: Descripción
+        example: Módulo de citas
+        type: string
+      id:
+        description: ID del recurso
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        description: Nombre del recurso
+        example: appointments
+        type: string
+    type: object
+  internal_modules_roles.RoleResponse:
+    properties:
+      created_at:
+        description: Fecha de creación
+        type: string
+      description:
+        description: Descripción del rol
+        example: Rol para veterinarios
+        type: string
+      id:
+        description: ID único del rol
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        description: Nombre del rol
+        example: veterinary
+        type: string
+      permissions:
+        description: Permisos poblados (recurso + acción)
+        items:
+          $ref: '#/definitions/internal_modules_roles.PermissionRef'
+        type: array
+      resources:
+        description: Recursos accesibles poblados
+        items:
+          $ref: '#/definitions/internal_modules_roles.ResourceRef'
+        type: array
+      tenant_id:
+        description: ID del tenant
+        example: 507f1f77bcf86cd799439011
+        type: string
+      updated_at:
+        description: Fecha de actualización
+        type: string
+    type: object
+  internal_modules_roles.UpdateRoleDTO:
+    properties:
+      description:
+        description: Descripción del rol
+        example: Rol para veterinarios
+        type: string
+      name:
+        description: Nombre del rol
+        example: veterinary
+        type: string
+      permissions_ids:
+        description: IDs de permisos asignados
+        items:
+          type: string
+        type: array
+      resources_ids:
+        description: IDs de recursos accesibles
+        items:
+          type: string
+        type: array
     type: object
   internal_modules_tenant.CreateTenantDTO:
     properties:
@@ -816,6 +1104,194 @@ paths:
       summary: Obtener pago
       tags:
       - payments
+  /permissions:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de permisos
+      parameters:
+      - default: 0
+        description: ' '
+        in: query
+        name: skip
+        type: integer
+      - default: 10
+        description: ' '
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PaginatedPermissionsResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Listar permisos
+      tags:
+      - permissions
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo permiso (combinación recurso + acción)
+      parameters:
+      - description: Datos del permiso
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_permissions.CreatePermissionDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Permiso ya existe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Crear permiso
+      tags:
+      - permissions
+  /permissions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un permiso por su ID (soft delete)
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Eliminar permiso
+      tags:
+      - permissions
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un permiso por su ID con el recurso poblado
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Obtener permiso
+      tags:
+      - permissions
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza la acción de un permiso existente
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_permissions.UpdatePermissionDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Actualizar permiso
+      tags:
+      - permissions
   /plans:
     get:
       description: Obtiene todos los planes (admin)
@@ -988,6 +1464,383 @@ paths:
       summary: Listar planes visibles
       tags:
       - plans
+  /resources:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de recursos
+      parameters:
+      - default: 0
+        description: ' '
+        in: query
+        name: skip
+        type: integer
+      - default: 10
+        description: ' '
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_resources.PaginatedResourcesResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Listar recursos
+      tags:
+      - resources
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo recurso del sistema (debe coincidir con el segmento
+        de ruta)
+      parameters:
+      - description: Datos del recurso
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_resources.CreateResourceDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Nombre ya existe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Crear recurso
+      tags:
+      - resources
+  /resources/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un recurso por su ID (soft delete)
+      parameters:
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Eliminar recurso
+      tags:
+      - resources
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un recurso por su ID
+      parameters:
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Obtener recurso
+      tags:
+      - resources
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un recurso existente
+      parameters:
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_resources.UpdateResourceDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Actualizar recurso
+      tags:
+      - resources
+  /roles:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de roles con permisos y recursos poblados
+      parameters:
+      - default: 0
+        description: ' '
+        in: query
+        name: skip
+        type: integer
+      - default: 10
+        description: ' '
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.PaginatedRolesResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Listar roles
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo rol con permisos y recursos asignados
+      parameters:
+      - description: Datos del rol
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_roles.CreateRoleDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Nombre ya existe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Crear rol
+      tags:
+      - roles
+  /roles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un rol por su ID (soft delete)
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Eliminar rol
+      tags:
+      - roles
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un rol por su ID con permisos y recursos poblados
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Obtener rol
+      tags:
+      - roles
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un rol, sus permisos y/o recursos asignados
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_roles.UpdateRoleDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Actualizar rol
+      tags:
+      - roles
   /tenants:
     get:
       consumes:
@@ -1188,6 +2041,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/internal_modules_users.PaginatedUsersResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
       summary: Listar usuarios
       tags:
       - users
@@ -1213,12 +2074,20 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "409":
-          description: Conflict
+        "401":
+          description: No autorizado
           schema:
             additionalProperties:
               type: string
             type: object
+        "409":
+          description: Email ya existe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
       summary: Crear usuario
       tags:
       - users
@@ -1242,12 +2111,20 @@ paths:
             additionalProperties:
               type: boolean
             type: object
-        "404":
-          description: Not Found
+        "401":
+          description: No autorizado
           schema:
             additionalProperties:
               type: string
             type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
       summary: Eliminar usuario
       tags:
       - users
@@ -1268,12 +2145,20 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/internal_modules_users.UserResponse'
-        "404":
-          description: Not Found
+        "401":
+          description: No autorizado
           schema:
             additionalProperties:
               type: string
             type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
       summary: Obtener usuario
       tags:
       - users
@@ -1304,12 +2189,20 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "404":
-          description: Not Found
+        "401":
+          description: No autorizado
           schema:
             additionalProperties:
               type: string
             type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
       summary: Actualizar usuario
       tags:
       - users

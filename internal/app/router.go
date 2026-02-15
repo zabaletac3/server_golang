@@ -6,7 +6,10 @@ import (
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/auth"
 	"github.com/eren_dev/go_server/internal/modules/payments"
+	"github.com/eren_dev/go_server/internal/modules/permissions"
 	"github.com/eren_dev/go_server/internal/modules/plans"
+	"github.com/eren_dev/go_server/internal/modules/resources"
+	"github.com/eren_dev/go_server/internal/modules/roles"
 	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/modules/users"
 	"github.com/eren_dev/go_server/internal/modules/webhooks"
@@ -43,5 +46,10 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 
 		// Webhooks module (public) - procesa webhooks de providers
 		webhooks.RegisterRoutes(public, db, paymentManager)
+
+		// RBAC modules (gestión de control de acceso)
+		resources.RegisterRoutes(private, db)
+		permissions.RegisterRoutes(private, db)
+		roles.RegisterRoutes(private, db)
 	}
 }

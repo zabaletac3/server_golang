@@ -1,4 +1,4 @@
-package users
+package roles
 
 import (
 	"github.com/gin-gonic/gin"
@@ -16,104 +16,99 @@ func NewHandler(service *Service) *Handler {
 }
 
 // Create godoc
-// @Summary      Crear usuario
-// @Description  Crea un nuevo usuario en el sistema
-// @Tags         users
+// @Summary      Crear rol
+// @Description  Crea un nuevo rol con permisos y recursos asignados
+// @Tags         roles
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        body  body      CreateUserDTO  true  "Datos del usuario"
-// @Success      200   {object}  UserResponse
+// @Param        body  body      CreateRoleDTO  true  "Datos del rol"
+// @Success      200   {object}  RoleResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      401   {object}  map[string]string "No autorizado"
-// @Failure      409   {object}  map[string]string "Email ya existe"
-// @Router       /users [post]
+// @Failure      409   {object}  map[string]string "Nombre ya existe"
+// @Router       /roles [post]
 func (h *Handler) Create(c *gin.Context) (any, error) {
-	var dto CreateUserDTO
+	var dto CreateRoleDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		return nil, validation.Validate(err)
 	}
-
 	return h.service.Create(c.Request.Context(), &dto)
 }
 
 // FindAll godoc
-// @Summary      Listar usuarios
-// @Description  Obtiene una lista paginada de usuarios
-// @Tags         users
+// @Summary      Listar roles
+// @Description  Obtiene una lista paginada de roles con permisos y recursos poblados
+// @Tags         roles
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
 // @Param        skip   query     int  false  " "  default(0)
 // @Param        limit  query     int  false  " "  default(10)
-// @Success      200    {object}  PaginatedUsersResponse
+// @Success      200    {object}  PaginatedRolesResponse
 // @Failure      401    {object}  map[string]string "No autorizado"
-// @Router       /users [get]
+// @Router       /roles [get]
 func (h *Handler) FindAll(c *gin.Context) (any, error) {
 	params := pagination.FromContext(c)
 	return h.service.FindAll(c.Request.Context(), params)
 }
 
 // FindByID godoc
-// @Summary      Obtener usuario
-// @Description  Obtiene un usuario por su ID
-// @Tags         users
+// @Summary      Obtener rol
+// @Description  Obtiene un rol por su ID con permisos y recursos poblados
+// @Tags         roles
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        id   path      string  true  "User ID"
-// @Success      200  {object}  UserResponse
+// @Param        id   path      string  true  "Role ID"
+// @Success      200  {object}  RoleResponse
 // @Failure      401  {object}  map[string]string "No autorizado"
 // @Failure      404  {object}  map[string]string "No encontrado"
-// @Router       /users/{id} [get]
+// @Router       /roles/{id} [get]
 func (h *Handler) FindByID(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	return h.service.FindByID(c.Request.Context(), id)
 }
 
 // Update godoc
-// @Summary      Actualizar usuario
-// @Description  Actualiza un usuario existente
-// @Tags         users
+// @Summary      Actualizar rol
+// @Description  Actualiza un rol, sus permisos y/o recursos asignados
+// @Tags         roles
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        id    path      string         true  "User ID"
-// @Param        body  body      UpdateUserDTO  true  "Datos a actualizar"
-// @Success      200   {object}  UserResponse
+// @Param        id    path      string         true  "Role ID"
+// @Param        body  body      UpdateRoleDTO  true  "Datos a actualizar"
+// @Success      200   {object}  RoleResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      401   {object}  map[string]string "No autorizado"
 // @Failure      404   {object}  map[string]string "No encontrado"
-// @Router       /users/{id} [patch]
+// @Router       /roles/{id} [patch]
 func (h *Handler) Update(c *gin.Context) (any, error) {
 	id := c.Param("id")
-
-	var dto UpdateUserDTO
+	var dto UpdateRoleDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		return nil, validation.Validate(err)
 	}
-
 	return h.service.Update(c.Request.Context(), id, &dto)
 }
 
 // Delete godoc
-// @Summary      Eliminar usuario
-// @Description  Elimina un usuario por su ID
-// @Tags         users
+// @Summary      Eliminar rol
+// @Description  Elimina un rol por su ID (soft delete)
+// @Tags         roles
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        id   path      string  true  "User ID"
+// @Param        id   path      string  true  "Role ID"
 // @Success      200  {object}  map[string]bool
 // @Failure      401  {object}  map[string]string "No autorizado"
 // @Failure      404  {object}  map[string]string "No encontrado"
-// @Router       /users/{id} [delete]
+// @Router       /roles/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) (any, error) {
 	id := c.Param("id")
-
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {
 		return nil, err
 	}
-
 	return gin.H{"deleted": true}, nil
 }
