@@ -26,7 +26,7 @@ func NewPaymentHandler(service *PaymentService) *PaymentHandler {
 // @Success      201 {object} PaymentResponse
 // @Failure      400 {object} validation.ValidationError
 // @Failure      500 {object} map[string]string
-// @Router       /payments [post]
+// @Router       /api/payments [post]
 func (h *PaymentHandler) Create(c *gin.Context) (any, error) {
 	var dto CreatePaymentDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -45,7 +45,7 @@ func (h *PaymentHandler) Create(c *gin.Context) (any, error) {
 // @Success      200 {object} PaymentResponse
 // @Failure      404 {object} map[string]string
 // @Failure      500 {object} map[string]string
-// @Router       /payments/{id} [get]
+// @Router       /api/payments/{id} [get]
 func (h *PaymentHandler) FindByID(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	return h.service.FindByID(c.Request.Context(), id)
@@ -61,7 +61,7 @@ func (h *PaymentHandler) FindByID(c *gin.Context) (any, error) {
 // @Success      200 {array} PaymentResponse
 // @Failure      400 {object} map[string]string
 // @Failure      500 {object} map[string]string
-// @Router       /tenants/{tenant_id}/payments [get]
+// @Router       /api/tenants/{tenant_id}/payments [get]
 func (h *PaymentHandler) FindByTenantID(c *gin.Context) (any, error) {
 	tenantID := c.Param("tenant_id")
 	if tenantID == "" {
@@ -88,7 +88,7 @@ func (h *PaymentHandler) FindByTenantID(c *gin.Context) (any, error) {
 // @Param        body body map[string]interface{} true "Webhook payload"
 // @Success      200 {object} map[string]string
 // @Failure      400 {object} map[string]string
-// @Router       /webhooks/{provider} [post]
+// @Router       /api/webhooks/{provider} [post]
 func (h *PaymentHandler) ProcessWebhook(c *gin.Context) (any, error) {
 	provider := c.Param("provider")
 	

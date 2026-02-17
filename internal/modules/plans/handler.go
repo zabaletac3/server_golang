@@ -24,7 +24,7 @@ func NewPlanHandler(service *PlanService) *PlanHandler {
 // @Success      201 {object} PlanResponse
 // @Failure      400 {object} validation.ValidationError
 // @Failure      500 {object} map[string]string
-// @Router       /plans [post]
+// @Router       /api/plans [post]
 func (h *PlanHandler) Create(c *gin.Context) (any, error) {
 	var dto CreatePlanDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -41,7 +41,7 @@ func (h *PlanHandler) Create(c *gin.Context) (any, error) {
 // @Produce      json
 // @Success      200 {array} PlanResponse
 // @Failure      500 {object} map[string]string
-// @Router       /plans [get]
+// @Router       /api/plans [get]
 func (h *PlanHandler) FindAll(c *gin.Context) (any, error) {
 	return h.service.FindAll(c.Request.Context())
 }
@@ -53,7 +53,7 @@ func (h *PlanHandler) FindAll(c *gin.Context) (any, error) {
 // @Produce      json
 // @Success      200 {array} PlanResponse
 // @Failure      500 {object} map[string]string
-// @Router       /plans/visible [get]
+// @Router       /api/plans/visible [get]
 func (h *PlanHandler) FindVisible(c *gin.Context) (any, error) {
 	return h.service.FindVisible(c.Request.Context())
 }
@@ -67,7 +67,7 @@ func (h *PlanHandler) FindVisible(c *gin.Context) (any, error) {
 // @Success      200 {object} PlanResponse
 // @Failure      404 {object} map[string]string
 // @Failure      500 {object} map[string]string
-// @Router       /plans/{id} [get]
+// @Router       /api/plans/{id} [get]
 func (h *PlanHandler) FindByID(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	return h.service.FindByID(c.Request.Context(), id)
@@ -85,7 +85,7 @@ func (h *PlanHandler) FindByID(c *gin.Context) (any, error) {
 // @Failure      400 {object} validation.ValidationError
 // @Failure      404 {object} map[string]string
 // @Failure      500 {object} map[string]string
-// @Router       /plans/{id} [patch]
+// @Router       /api/plans/{id} [patch]
 func (h *PlanHandler) Update(c *gin.Context) (any, error) {
 	id := c.Param("id")
 
@@ -105,7 +105,7 @@ func (h *PlanHandler) Update(c *gin.Context) (any, error) {
 // @Success      204
 // @Failure      404 {object} map[string]string
 // @Failure      500 {object} map[string]string
-// @Router       /plans/{id} [delete]
+// @Router       /api/plans/{id} [delete]
 func (h *PlanHandler) Delete(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	return nil, h.service.Delete(c.Request.Context(), id)

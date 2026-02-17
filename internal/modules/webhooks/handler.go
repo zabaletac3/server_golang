@@ -40,7 +40,7 @@ func NewWebhookHandler(
 // @Param        provider path string true "Provider name" Enums(wompi, stripe)
 // @Success      200 {object} map[string]string
 // @Failure      400 {object} map[string]string
-// @Router       /webhooks/{provider} [post]
+// @Router       /api/webhooks/{provider} [post]
 func (h *WebhookHandler) ProcessWebhook(c *gin.Context) (any, error) {
 	providerName := c.Param("provider")
 	

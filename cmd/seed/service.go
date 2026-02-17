@@ -76,41 +76,79 @@ func (s *SeedService) runMigrations(ctx context.Context) error {
 		}
 	}
 
-	// 2. Crear índices compuestos con partial filter (solo docs activos, deleted_at=nil)
-	// Esto permite que documentos soft-deleted no bloqueen nuevas inserciones con el mismo nombre.
+	// 2. Crear índices compuestos
 	type createMigration struct {
 		collection string
 		keys       bson.D
 		name       string
-		partial    bson.D
+		unique     bool
+		partial    bson.D // nil = no partial filter
 	}
 	creates := []createMigration{
+		// Roles: unique active name per tenant
 		{
 			collection: "roles",
 			keys:       bson.D{{Key: "tenant_id", Value: 1}, {Key: "name", Value: 1}},
 			name:       "tenant_id_1_name_1_active",
+			unique:     true,
 			partial:    bson.D{{Key: "deleted_at", Value: bson.D{{Key: "$eq", Value: nil}}}},
 		},
+		// Resources: unique active name per tenant
 		{
 			collection: "resources",
 			keys:       bson.D{{Key: "tenant_id", Value: 1}, {Key: "name", Value: 1}},
 			name:       "tenant_id_1_name_1_active",
+			unique:     true,
+			partial:    bson.D{{Key: "deleted_at", Value: bson.D{{Key: "$eq", Value: nil}}}},
+		},
+		// Patients: query by tenant + soft delete
+		{
+			collection: "patients",
+			keys:       bson.D{{Key: "tenant_id", Value: 1}, {Key: "deleted_at", Value: 1}},
+			name:       "patients_tenant_deleted",
+		},
+		// Patients: query by tenant + owner
+		{
+			collection: "patients",
+			keys:       bson.D{{Key: "tenant_id", Value: 1}, {Key: "owner_id", Value: 1}},
+			name:       "patients_tenant_owner",
+		},
+		// Patients: unique microchip per tenant (only when microchip exists and is non-empty)
+		{
+			collection: "patients",
+			keys:       bson.D{{Key: "tenant_id", Value: 1}, {Key: "microchip", Value: 1}},
+			name:       "patients_tenant_microchip_unique",
+			unique:     true,
+			partial: bson.D{
+				{Key: "microchip", Value: bson.D{{Key: "$exists", Value: true}, {Key: "$ne", Value: ""}}},
+			},
+		},
+		// Species: unique normalized name per tenant (active only)
+		{
+			collection: "species",
+			keys:       bson.D{{Key: "tenant_id", Value: 1}, {Key: "normalized_name", Value: 1}},
+			name:       "species_tenant_normalized_name_active",
+			unique:     true,
 			partial:    bson.D{{Key: "deleted_at", Value: bson.D{{Key: "$eq", Value: nil}}}},
 		},
 	}
 	for _, m := range creates {
 		col := s.db.Collection(m.collection)
+		opts := options.Index().SetName(m.name)
+		if m.unique {
+			opts.SetUnique(true)
+		}
+		if m.partial != nil {
+			opts.SetPartialFilterExpression(m.partial)
+		}
 		_, err := col.Indexes().CreateOne(ctx, mongo.IndexModel{
-			Keys: m.keys,
-			Options: options.Index().
-				SetUnique(true).
-				SetName(m.name).
-				SetPartialFilterExpression(m.partial),
+			Keys:    m.keys,
+			Options: opts,
 		})
 		if err != nil {
 			s.logger.Info("index already exists or could not be created", "collection", m.collection, "index", m.name)
 		} else {
-			s.logger.Info("created partial composite index", "collection", m.collection, "index", m.name)
+			s.logger.Info("created index", "collection", m.collection, "index", m.name)
 		}
 	}
 

@@ -131,7 +131,7 @@ func (h *Handler) RemovePushToken(c *gin.Context) (any, error) {
 //	@Success		200		{object}	PaginatedOwnersResponse
 //	@Failure		401		{object}	map[string]string
 //	@Security		Bearer
-//	@Router			/owners [get]
+//	@Router			/api/owners [get]
 func (h *Handler) FindAll(c *gin.Context) (any, error) {
 	params := pagination.FromContext(c)
 	return h.service.FindAll(c.Request.Context(), params)
@@ -146,7 +146,7 @@ func (h *Handler) FindAll(c *gin.Context) (any, error) {
 //	@Success		200	{object}	OwnerResponse
 //	@Failure		404	{object}	map[string]string
 //	@Security		Bearer
-//	@Router			/owners/{id} [get]
+//	@Router			/api/owners/{id} [get]
 func (h *Handler) FindByID(c *gin.Context) (any, error) {
 	return h.service.FindByID(c.Request.Context(), c.Param("id"))
 }
@@ -160,7 +160,7 @@ func (h *Handler) FindByID(c *gin.Context) (any, error) {
 //	@Success		200	{object}	map[string]string
 //	@Failure		404	{object}	map[string]string
 //	@Security		Bearer
-//	@Router			/owners/{id} [delete]
+//	@Router			/api/owners/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) (any, error) {
 	if err := h.service.Delete(c.Request.Context(), c.Param("id")); err != nil {
 		return nil, err

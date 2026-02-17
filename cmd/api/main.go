@@ -20,19 +20,36 @@ import (
 	"github.com/eren_dev/go_server/internal/shared/database"
 )
 
-// @title           Go Server API
+// @title           Vetsify API
 // @version         1.0
-// @description     Template API con Go + Gin + MongoDBD
-// @termsOfService  http://swagger.io/terms/
+// @description     API para plataforma veterinaria multi-tenant. Soporta panel de administración (staff) y app móvil (owners).
+// @description
+// @description     ## Autenticación
+// @description     Todas las rutas protegidas requieren el header `Authorization: Bearer <token>`.
+// @description     - **Staff**: Obtén tokens via `POST /api/auth/login`
+// @description     - **Owners (mobile)**: Obtén tokens via `POST /mobile/auth/login`
+// @description
+// @description     ## Multi-tenancy
+// @description     Las rutas que operan sobre datos de un tenant específico (patients, species, etc.) requieren el header `X-Tenant-ID` con el ObjectID del tenant.
+// @description     Este header debe enviarse en **todas** las peticiones a rutas marcadas con el parámetro `X-Tenant-ID`.
+// @description     El frontend puede configurarlo una vez en el interceptor HTTP (axios/fetch).
+// @description
+// @description     ## Roles (RBAC)
+// @description     Las rutas del panel admin (`/api/*`) están protegidas por RBAC.
+// @description     Roles disponibles: `admin`, `veterinarian`, `receptionist`, `assistant`, `accountant`.
+// @description
+// @description     ## Paginación
+// @description     Las rutas que retornan listas soportan `skip` y `limit` como query params.
+// @description     Respuesta incluye `pagination: { skip, limit, total, total_pages }`.
 
-// @contact.name   API Support
-// @contact.email  support@example.com
+// @contact.name   Vetsify Support
+// @contact.email  support@vetsify.com
 
 // @license.name  MIT
 // @license.url   https://opensource.org/licenses/MIT
 
 // @host      localhost:8080
-// @BasePath  /api
+// @BasePath  /
 
 // @securityDefinitions.apikey Bearer
 // @in header

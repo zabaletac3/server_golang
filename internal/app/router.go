@@ -8,6 +8,7 @@ import (
 	mobileAuth "github.com/eren_dev/go_server/internal/modules/mobile_auth"
 	"github.com/eren_dev/go_server/internal/modules/notifications"
 	"github.com/eren_dev/go_server/internal/modules/owners"
+	"github.com/eren_dev/go_server/internal/modules/patients"
 	"github.com/eren_dev/go_server/internal/modules/payments"
 	"github.com/eren_dev/go_server/internal/modules/permissions"
 	"github.com/eren_dev/go_server/internal/modules/plans"
@@ -44,14 +45,27 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 	mobilePrivate.Use(sharedAuth.JWTMiddleware(cfg))
 	mobilePrivate.Use(sharedMiddleware.OwnerGuardMiddleware())
 
+	// Tenant-scoped staff routes (JWT + X-Tenant-ID + RBAC)
+	privateTenant := r.Group("/api")
+	privateTenant.Use(sharedAuth.JWTMiddleware(cfg))
+	privateTenant.Use(sharedMiddleware.TenantMiddleware())
+
+	// Tenant-scoped mobile routes (JWT + X-Tenant-ID + OwnerGuard)
+	mobileTenant := r.Group("/mobile")
+	mobileTenant.Use(sharedAuth.JWTMiddleware(cfg))
+	mobileTenant.Use(sharedMiddleware.TenantMiddleware())
+	mobileTenant.Use(sharedMiddleware.OwnerGuardMiddleware())
+
 	if db != nil {
-		// RBAC middleware aplicado solo a rutas de staff
-		private.Use(sharedMiddleware.RBACMiddleware(sharedMiddleware.RBACConfig{
+		// RBAC middleware aplicado a rutas de staff
+		rbacMiddleware := sharedMiddleware.RBACMiddleware(sharedMiddleware.RBACConfig{
 			UserRepo:       users.NewRepository(db),
 			RoleRepo:       roles.NewRepository(db),
 			PermissionRepo: permissions.NewRepository(db),
 			ResourceRepo:   resources.NewRepository(db),
-		}))
+		})
+		private.Use(rbacMiddleware)
+		privateTenant.Use(rbacMiddleware)
 
 		// Staff auth: rutas públicas + /auth/me sin RBAC
 		auth.RegisterRoutes(public, authPrivate, db, cfg)
@@ -79,11 +93,17 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		permissions.RegisterRoutes(private, db)
 		roles.RegisterRoutes(private, db)
 
+		// Patients + Species (JWT + Tenant + RBAC)
+		patients.RegisterAdminRoutes(privateTenant, db)
+
 		// Mobile auth routes (public + owner-private)
 		mobileAuth.RegisterRoutes(mobilePublic, mobilePrivate, db, cfg)
 
 		// Mobile owner profile routes (owner-private)
 		owners.RegisterMobileRoutes(mobilePrivate, db)
+
+		// Mobile patients (owner-private + tenant)
+		patients.RegisterMobileRoutes(mobileTenant, db)
 
 		// Mobile notifications (owner-private)
 		notifications.RegisterMobileRoutes(mobilePrivate, db, pushProvider)

@@ -1,4 +1,4 @@
-basePath: /api
+basePath: /
 definitions:
   github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo:
     properties:
@@ -348,6 +348,158 @@ definitions:
       phone:
         example: +57 300 123 4567
         type: string
+    type: object
+  internal_modules_patients.CreatePatientDTO:
+    properties:
+      avatar_url:
+        type: string
+      birth_date:
+        type: string
+      breed:
+        example: Labrador
+        type: string
+      color:
+        example: Dorado
+        type: string
+      gender:
+        allOf:
+        - $ref: '#/definitions/internal_modules_patients.Gender'
+        enum:
+        - male
+        - female
+        - unknown
+      microchip:
+        example: "985112000123456"
+        type: string
+      name:
+        example: Max
+        type: string
+      notes:
+        type: string
+      owner_id:
+        type: string
+      species_id:
+        type: string
+      sterilized:
+        type: boolean
+      weight:
+        example: 12.5
+        type: number
+    required:
+    - gender
+    - name
+    - owner_id
+    - species_id
+    - weight
+    type: object
+  internal_modules_patients.Gender:
+    enum:
+    - male
+    - female
+    - unknown
+    type: string
+    x-enum-varnames:
+    - GenderMale
+    - GenderFemale
+    - GenderUnknown
+  internal_modules_patients.PaginatedPatientsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/internal_modules_patients.PatientResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo'
+    type: object
+  internal_modules_patients.PatientResponse:
+    properties:
+      active:
+        type: boolean
+      avatar_url:
+        type: string
+      birth_date:
+        type: string
+      breed:
+        type: string
+      color:
+        type: string
+      created_at:
+        type: string
+      gender:
+        $ref: '#/definitions/internal_modules_patients.Gender'
+      id:
+        type: string
+      microchip:
+        type: string
+      name:
+        type: string
+      notes:
+        type: string
+      owner_id:
+        type: string
+      species_id:
+        type: string
+      sterilized:
+        type: boolean
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+      weight:
+        type: number
+    type: object
+  internal_modules_patients.ResolveSpeciesDTO:
+    properties:
+      name:
+        example: Canino
+        type: string
+    required:
+    - name
+    type: object
+  internal_modules_patients.SpeciesResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      normalized_name:
+        type: string
+      tenant_id:
+        type: string
+    type: object
+  internal_modules_patients.UpdatePatientDTO:
+    properties:
+      active:
+        type: boolean
+      avatar_url:
+        type: string
+      birth_date:
+        type: string
+      breed:
+        type: string
+      color:
+        type: string
+      gender:
+        allOf:
+        - $ref: '#/definitions/internal_modules_patients.Gender'
+        enum:
+        - male
+        - female
+        - unknown
+      microchip:
+        type: string
+      name:
+        type: string
+      notes:
+        type: string
+      species_id:
+        type: string
+      sterilized:
+        type: boolean
+      weight:
+        type: number
     type: object
   internal_modules_payments.CreatePaymentDTO:
     properties:
@@ -1149,16 +1301,153 @@ definitions:
 host: localhost:8080
 info:
   contact:
-    email: support@example.com
-    name: API Support
-  description: Template API con Go + Gin + MongoDBD
+    email: support@vetsify.com
+    name: Vetsify Support
+  description: |-
+    API para plataforma veterinaria multi-tenant. Soporta panel de administración (staff) y app móvil (owners).
+
+    ## Autenticación
+    Todas las rutas protegidas requieren el header `Authorization: Bearer <token>`.
+    - **Staff**: Obtén tokens via `POST /api/auth/login`
+    - **Owners (mobile)**: Obtén tokens via `POST /mobile/auth/login`
+
+    ## Multi-tenancy
+    Las rutas que operan sobre datos de un tenant específico (patients, species, etc.) requieren el header `X-Tenant-ID` con el ObjectID del tenant.
+    Este header debe enviarse en **todas** las peticiones a rutas marcadas con el parámetro `X-Tenant-ID`.
+    El frontend puede configurarlo una vez en el interceptor HTTP (axios/fetch).
+
+    ## Roles (RBAC)
+    Las rutas del panel admin (`/api/*`) están protegidas por RBAC.
+    Roles disponibles: `admin`, `veterinarian`, `receptionist`, `assistant`, `accountant`.
+
+    ## Paginación
+    Las rutas que retornan listas soportan `skip` y `limit` como query params.
+    Respuesta incluye `pagination: { skip, limit, total, total_pages }`.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-  termsOfService: http://swagger.io/terms/
-  title: Go Server API
+  title: Vetsify API
   version: "1.0"
 paths:
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica un usuario y retorna tokens
+      parameters:
+      - description: Credenciales
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth.LoginDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_auth.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: Credenciales inválidas
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Iniciar sesión
+      tags:
+      - auth
+  /api/auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene información del usuario autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_auth.UserInfo'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Usuario actual
+      tags:
+      - auth
+  /api/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Genera un nuevo access token usando el refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth.RefreshDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_auth.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: Token inválido
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Renovar token
+      tags:
+      - auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva cuenta de usuario
+      parameters:
+      - description: Datos de registro
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth.RegisterDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_auth.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "409":
+          description: Email ya existe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Registrar usuario
+      tags:
+      - auth
   /api/notifications:
     get:
       parameters:
@@ -1258,50 +1547,354 @@ paths:
       summary: Unread notification count (staff)
       tags:
       - admin/notifications
-  /auth/login:
-    post:
-      consumes:
-      - application/json
-      description: Autentica un usuario y retorna tokens
+  /api/owners:
+    get:
       parameters:
-      - description: Credenciales
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_auth.LoginDTO'
+      - description: Skip
+        in: query
+        name: skip
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_modules_auth.TokenResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+            $ref: '#/definitions/internal_modules_owners.PaginatedOwnersResponse'
         "401":
-          description: Credenciales inválidas
+          description: Unauthorized
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Iniciar sesión
+      security:
+      - Bearer: []
+      summary: List owners
       tags:
-      - auth
-  /auth/me:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene información del usuario autenticado
+      - owners
+  /api/owners/{id}:
+    delete:
+      parameters:
+      - description: Owner ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_modules_auth.UserInfo'
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete owner
+      tags:
+      - owners
+    get:
+      parameters:
+      - description: Owner ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_owners.OwnerResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get owner by ID
+      tags:
+      - owners
+  /api/patients:
+    get:
+      parameters:
+      - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
+      - description: Skip
+        in: query
+        name: skip
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_patients.PaginatedPatientsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List patients
+      tags:
+      - patients
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
+      - description: Patient data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_patients.CreatePatientDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_patients.PatientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create patient
+      tags:
+      - patients
+  /api/patients/{id}:
+    delete:
+      parameters:
+      - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
+      - description: Patient ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete patient
+      tags:
+      - patients
+    get:
+      parameters:
+      - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
+      - description: Patient ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_patients.PatientResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get patient by ID
+      tags:
+      - patients
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
+      - description: Patient ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_patients.UpdatePatientDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_patients.PatientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update patient
+      tags:
+      - patients
+  /api/payments:
+    post:
+      consumes:
+      - application/json
+      description: Registra un nuevo pago en el sistema
+      parameters:
+      - description: Datos del pago
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_payments.CreatePaymentDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_payments.PaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear pago
+      tags:
+      - payments
+  /api/payments/{id}:
+    get:
+      description: Obtiene un pago por ID
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_payments.PaymentResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener pago
+      tags:
+      - payments
+  /api/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de permisos
+      parameters:
+      - default: 0
+        description: ' '
+        in: query
+        name: skip
+        type: integer
+      - default: 10
+        description: ' '
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PaginatedPermissionsResponse'
         "401":
           description: No autorizado
           schema:
@@ -1310,73 +1903,1178 @@ paths:
             type: object
       security:
       - Bearer: []
-      summary: Usuario actual
+      summary: Listar permisos
       tags:
-      - auth
-  /auth/refresh:
+      - permissions
     post:
       consumes:
       - application/json
-      description: Genera un nuevo access token usando el refresh token
+      description: Crea un nuevo permiso (combinación recurso + acción)
       parameters:
-      - description: Refresh token
+      - description: Datos del permiso
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_auth.RefreshDTO'
+          $ref: '#/definitions/internal_modules_permissions.CreatePermissionDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_modules_auth.TokenResponse'
+            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
         "401":
-          description: Token inválido
+          description: No autorizado
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Renovar token
+        "409":
+          description: Permiso ya existe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Crear permiso
       tags:
-      - auth
-  /auth/register:
-    post:
+      - permissions
+  /api/permissions/{id}:
+    delete:
       consumes:
       - application/json
-      description: Crea una nueva cuenta de usuario
+      description: Elimina un permiso por su ID (soft delete)
       parameters:
-      - description: Datos de registro
-        in: body
-        name: body
+      - description: Permission ID
+        in: path
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/internal_modules_auth.RegisterDTO'
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_modules_auth.TokenResponse'
+            additionalProperties:
+              type: boolean
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Eliminar permiso
+      tags:
+      - permissions
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un permiso por su ID con el recurso poblado
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Obtener permiso
+      tags:
+      - permissions
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza la acción de un permiso existente
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_permissions.UpdatePermissionDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Actualizar permiso
+      tags:
+      - permissions
+  /api/plans:
+    get:
+      description: Obtiene todos los planes (admin)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_plans.PlanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar planes
+      tags:
+      - plans
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo plan de suscripción
+      parameters:
+      - description: Datos del plan
+        in: body
+        name: plan
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_plans.CreatePlanDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_plans.PlanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear plan
+      tags:
+      - plans
+  /api/plans/{id}:
+    delete:
+      description: Elimina un plan
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar plan
+      tags:
+      - plans
+    get:
+      description: Obtiene un plan por ID
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_plans.PlanResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener plan
+      tags:
+      - plans
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un plan existente
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: plan
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_plans.UpdatePlanDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_plans.PlanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar plan
+      tags:
+      - plans
+  /api/plans/visible:
+    get:
+      description: Obtiene solo los planes visibles (público)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_plans.PlanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar planes visibles
+      tags:
+      - plans
+  /api/resources:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de recursos
+      parameters:
+      - default: 0
+        description: ' '
+        in: query
+        name: skip
+        type: integer
+      - default: 10
+        description: ' '
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_resources.PaginatedResourcesResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Listar recursos
+      tags:
+      - resources
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo recurso del sistema (debe coincidir con el segmento
+        de ruta)
+      parameters:
+      - description: Datos del recurso
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_resources.CreateResourceDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Nombre ya existe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Crear recurso
+      tags:
+      - resources
+  /api/resources/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un recurso por su ID (soft delete)
+      parameters:
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Eliminar recurso
+      tags:
+      - resources
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un recurso por su ID
+      parameters:
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Obtener recurso
+      tags:
+      - resources
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un recurso existente
+      parameters:
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_resources.UpdateResourceDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Actualizar recurso
+      tags:
+      - resources
+  /api/roles:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de roles con permisos y recursos poblados
+      parameters:
+      - default: 0
+        description: ' '
+        in: query
+        name: skip
+        type: integer
+      - default: 10
+        description: ' '
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.PaginatedRolesResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Listar roles
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo rol con permisos y recursos asignados
+      parameters:
+      - description: Datos del rol
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_roles.CreateRoleDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Nombre ya existe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Crear rol
+      tags:
+      - roles
+  /api/roles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un rol por su ID (soft delete)
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Eliminar rol
+      tags:
+      - roles
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un rol por su ID con permisos y recursos poblados
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Obtener rol
+      tags:
+      - roles
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un rol, sus permisos y/o recursos asignados
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_roles.UpdateRoleDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_roles.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Actualizar rol
+      tags:
+      - roles
+  /api/species:
+    get:
+      parameters:
+      - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_patients.SpeciesResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List species
+      tags:
+      - species
+    post:
+      consumes:
+      - application/json
+      description: Finds an exact/similar match or creates a new species. Returns
+        409 with suggestions if ambiguous.
+      parameters:
+      - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
+      - description: Species name
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_patients.ResolveSpeciesDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_patients.SpeciesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Resolve or create species
+      tags:
+      - species
+  /api/tenants:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de tenants
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_tenant.TenantResponse'
+            type: array
+      summary: Listar tenants
+      tags:
+      - tenant
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo tenant en el sistema
+      parameters:
+      - description: Datos del tenant
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_tenant.CreateTenantDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear tenant
+      tags:
+      - tenant
+  /api/tenants/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un tenant por su ID (soft delete)
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar tenant
+      tags:
+      - tenant
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un tenant por su ID
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener tenant
+      tags:
+      - tenant
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un tenant existente
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_tenant.UpdateTenantDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar tenant
+      tags:
+      - tenant
+  /api/tenants/{tenant_id}/payments:
+    get:
+      description: Obtiene el historial de pagos de un tenant
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: tenant_id
+        required: true
+        type: string
+      - default: 50
+        description: Límite de resultados
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_payments.PaymentResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Historial de pagos de un tenant
+      tags:
+      - payments
+  /api/users:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista paginada de usuarios
+      parameters:
+      - default: 0
+        description: ' '
+        in: query
+        name: skip
+        type: integer
+      - default: 10
+        description: ' '
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_users.PaginatedUsersResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Listar usuarios
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo usuario en el sistema
+      parameters:
+      - description: Datos del usuario
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_users.CreateUserDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_users.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "409":
           description: Email ya existe
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Registrar usuario
+      security:
+      - Bearer: []
+      summary: Crear usuario
       tags:
-      - auth
+      - users
+  /api/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un usuario por su ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Eliminar usuario
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Obtiene un usuario por su ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_users.UserResponse'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Obtener usuario
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza un usuario existente
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_users.UpdateUserDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_users.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: No encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Actualizar usuario
+      tags:
+      - users
+  /api/webhooks/{provider}:
+    post:
+      consumes:
+      - application/json
+      description: Endpoint para recibir webhooks de proveedores de pago
+      parameters:
+      - description: Provider name
+        enum:
+        - wompi
+        - stripe
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Procesar webhook de pago
+      tags:
+      - webhooks
   /mobile/auth/login:
     post:
       consumes:
@@ -1702,9 +3400,14 @@ paths:
       summary: Remove push token
       tags:
       - mobile/owners
-  /owners:
+  /mobile/patients:
     get:
       parameters:
+      - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
       - description: Skip
         in: query
         name: skip
@@ -1719,7 +3422,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_modules_owners.PaginatedOwnersResponse'
+            $ref: '#/definitions/internal_modules_patients.PaginatedPatientsResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1728,917 +3431,18 @@ paths:
             type: object
       security:
       - Bearer: []
-      summary: List owners
+      summary: List my patients
       tags:
-      - owners
-  /owners/{id}:
-    delete:
-      parameters:
-      - description: Owner ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Delete owner
-      tags:
-      - owners
+      - mobile/patients
+  /mobile/patients/{id}:
     get:
-      parameters:
-      - description: Owner ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_owners.OwnerResponse'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Get owner by ID
-      tags:
-      - owners
-  /payments:
-    post:
-      consumes:
-      - application/json
-      description: Registra un nuevo pago en el sistema
-      parameters:
-      - description: Datos del pago
-        in: body
-        name: payment
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_payments.CreatePaymentDTO'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/internal_modules_payments.PaymentResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Crear pago
-      tags:
-      - payments
-  /payments/{id}:
-    get:
-      description: Obtiene un pago por ID
-      parameters:
-      - description: Payment ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_payments.PaymentResponse'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Obtener pago
-      tags:
-      - payments
-  /permissions:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene una lista paginada de permisos
-      parameters:
-      - default: 0
-        description: ' '
-        in: query
-        name: skip
-        type: integer
-      - default: 10
-        description: ' '
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_permissions.PaginatedPermissionsResponse'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Listar permisos
-      tags:
-      - permissions
-    post:
-      consumes:
-      - application/json
-      description: Crea un nuevo permiso (combinación recurso + acción)
-      parameters:
-      - description: Datos del permiso
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_permissions.CreatePermissionDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "409":
-          description: Permiso ya existe
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Crear permiso
-      tags:
-      - permissions
-  /permissions/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Elimina un permiso por su ID (soft delete)
-      parameters:
-      - description: Permission ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: boolean
-            type: object
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Eliminar permiso
-      tags:
-      - permissions
-    get:
-      consumes:
-      - application/json
-      description: Obtiene un permiso por su ID con el recurso poblado
-      parameters:
-      - description: Permission ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Obtener permiso
-      tags:
-      - permissions
-    patch:
-      consumes:
-      - application/json
-      description: Actualiza la acción de un permiso existente
-      parameters:
-      - description: Permission ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Datos a actualizar
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_permissions.UpdatePermissionDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_permissions.PermissionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Actualizar permiso
-      tags:
-      - permissions
-  /plans:
-    get:
-      description: Obtiene todos los planes (admin)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/internal_modules_plans.PlanResponse'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Listar planes
-      tags:
-      - plans
-    post:
-      consumes:
-      - application/json
-      description: Crea un nuevo plan de suscripción
-      parameters:
-      - description: Datos del plan
-        in: body
-        name: plan
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_plans.CreatePlanDTO'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/internal_modules_plans.PlanResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Crear plan
-      tags:
-      - plans
-  /plans/{id}:
-    delete:
-      description: Elimina un plan
-      parameters:
-      - description: Plan ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "204":
-          description: No Content
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Eliminar plan
-      tags:
-      - plans
-    get:
-      description: Obtiene un plan por ID
-      parameters:
-      - description: Plan ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_plans.PlanResponse'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Obtener plan
-      tags:
-      - plans
-    patch:
-      consumes:
-      - application/json
-      description: Actualiza un plan existente
-      parameters:
-      - description: Plan ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Datos a actualizar
-        in: body
-        name: plan
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_plans.UpdatePlanDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_plans.PlanResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Actualizar plan
-      tags:
-      - plans
-  /plans/visible:
-    get:
-      description: Obtiene solo los planes visibles (público)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/internal_modules_plans.PlanResponse'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Listar planes visibles
-      tags:
-      - plans
-  /resources:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene una lista paginada de recursos
-      parameters:
-      - default: 0
-        description: ' '
-        in: query
-        name: skip
-        type: integer
-      - default: 10
-        description: ' '
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_resources.PaginatedResourcesResponse'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Listar recursos
-      tags:
-      - resources
-    post:
-      consumes:
-      - application/json
-      description: Crea un nuevo recurso del sistema (debe coincidir con el segmento
-        de ruta)
-      parameters:
-      - description: Datos del recurso
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_resources.CreateResourceDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "409":
-          description: Nombre ya existe
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Crear recurso
-      tags:
-      - resources
-  /resources/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Elimina un recurso por su ID (soft delete)
-      parameters:
-      - description: Resource ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: boolean
-            type: object
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Eliminar recurso
-      tags:
-      - resources
-    get:
-      consumes:
-      - application/json
-      description: Obtiene un recurso por su ID
-      parameters:
-      - description: Resource ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Obtener recurso
-      tags:
-      - resources
-    patch:
-      consumes:
-      - application/json
-      description: Actualiza un recurso existente
-      parameters:
-      - description: Resource ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Datos a actualizar
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_resources.UpdateResourceDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_resources.ResourceResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Actualizar recurso
-      tags:
-      - resources
-  /roles:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene una lista paginada de roles con permisos y recursos poblados
-      parameters:
-      - default: 0
-        description: ' '
-        in: query
-        name: skip
-        type: integer
-      - default: 10
-        description: ' '
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_roles.PaginatedRolesResponse'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Listar roles
-      tags:
-      - roles
-    post:
-      consumes:
-      - application/json
-      description: Crea un nuevo rol con permisos y recursos asignados
-      parameters:
-      - description: Datos del rol
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_roles.CreateRoleDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_roles.RoleResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "409":
-          description: Nombre ya existe
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Crear rol
-      tags:
-      - roles
-  /roles/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Elimina un rol por su ID (soft delete)
-      parameters:
-      - description: Role ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: boolean
-            type: object
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Eliminar rol
-      tags:
-      - roles
-    get:
-      consumes:
-      - application/json
-      description: Obtiene un rol por su ID con permisos y recursos poblados
-      parameters:
-      - description: Role ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_roles.RoleResponse'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Obtener rol
-      tags:
-      - roles
-    patch:
-      consumes:
-      - application/json
-      description: Actualiza un rol, sus permisos y/o recursos asignados
-      parameters:
-      - description: Role ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Datos a actualizar
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_roles.UpdateRoleDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_roles.RoleResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Actualizar rol
-      tags:
-      - roles
-  /tenants:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene una lista de tenants
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/internal_modules_tenant.TenantResponse'
-            type: array
-      summary: Listar tenants
-      tags:
-      - tenant
-    post:
-      consumes:
-      - application/json
-      description: Crea un nuevo tenant en el sistema
-      parameters:
-      - description: Datos del tenant
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_tenant.CreateTenantDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "409":
-          description: Conflict
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Crear tenant
-      tags:
-      - tenant
-  /tenants/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Elimina un tenant por su ID (soft delete)
       parameters:
       - description: Tenant ID
+        in: header
+        name: X-Tenant-ID
+        required: true
+        type: string
+      - description: Patient ID
         in: path
         name: id
         required: true
@@ -2649,8 +3453,18 @@ paths:
         "200":
           description: OK
           schema:
+            $ref: '#/definitions/internal_modules_patients.PatientResponse'
+        "401":
+          description: Unauthorized
+          schema:
             additionalProperties:
-              type: boolean
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "404":
           description: Not Found
@@ -2658,329 +3472,11 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Eliminar tenant
-      tags:
-      - tenant
-    get:
-      consumes:
-      - application/json
-      description: Obtiene un tenant por su ID
-      parameters:
-      - description: Tenant ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Obtener tenant
-      tags:
-      - tenant
-    patch:
-      consumes:
-      - application/json
-      description: Actualiza un tenant existente
-      parameters:
-      - description: Tenant ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Datos a actualizar
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_tenant.UpdateTenantDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_tenant.TenantResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Actualizar tenant
-      tags:
-      - tenant
-  /tenants/{tenant_id}/payments:
-    get:
-      description: Obtiene el historial de pagos de un tenant
-      parameters:
-      - description: Tenant ID
-        in: path
-        name: tenant_id
-        required: true
-        type: string
-      - default: 50
-        description: Límite de resultados
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/internal_modules_payments.PaymentResponse'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Historial de pagos de un tenant
-      tags:
-      - payments
-  /users:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene una lista paginada de usuarios
-      parameters:
-      - default: 0
-        description: ' '
-        in: query
-        name: skip
-        type: integer
-      - default: 10
-        description: ' '
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_users.PaginatedUsersResponse'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
       security:
       - Bearer: []
-      summary: Listar usuarios
+      summary: Get my patient by ID
       tags:
-      - users
-    post:
-      consumes:
-      - application/json
-      description: Crea un nuevo usuario en el sistema
-      parameters:
-      - description: Datos del usuario
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_users.CreateUserDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_users.UserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "409":
-          description: Email ya existe
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Crear usuario
-      tags:
-      - users
-  /users/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Elimina un usuario por su ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: boolean
-            type: object
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Eliminar usuario
-      tags:
-      - users
-    get:
-      consumes:
-      - application/json
-      description: Obtiene un usuario por su ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_users.UserResponse'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Obtener usuario
-      tags:
-      - users
-    patch:
-      consumes:
-      - application/json
-      description: Actualiza un usuario existente
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Datos a actualizar
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/internal_modules_users.UpdateUserDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_modules_users.UserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
-        "401":
-          description: No autorizado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: No encontrado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Actualizar usuario
-      tags:
-      - users
-  /webhooks/{provider}:
-    post:
-      consumes:
-      - application/json
-      description: Endpoint para recibir webhooks de proveedores de pago
-      parameters:
-      - description: Provider name
-        enum:
-        - wompi
-        - stripe
-        in: path
-        name: provider
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Procesar webhook de pago
-      tags:
-      - webhooks
+      - mobile/patients
 securityDefinitions:
   Bearer:
     description: 'Ingresa el token con el prefijo Bearer: Bearer <token>'

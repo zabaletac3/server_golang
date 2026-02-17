@@ -27,7 +27,7 @@ func NewHandler(service *Service) *Handler {
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      401   {object}  map[string]string "No autorizado"
 // @Failure      409   {object}  map[string]string "Nombre ya existe"
-// @Router       /roles [post]
+// @Router       /api/roles [post]
 func (h *Handler) Create(c *gin.Context) (any, error) {
 	var dto CreateRoleDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -47,7 +47,7 @@ func (h *Handler) Create(c *gin.Context) (any, error) {
 // @Param        limit  query     int  false  " "  default(10)
 // @Success      200    {object}  PaginatedRolesResponse
 // @Failure      401    {object}  map[string]string "No autorizado"
-// @Router       /roles [get]
+// @Router       /api/roles [get]
 func (h *Handler) FindAll(c *gin.Context) (any, error) {
 	params := pagination.FromContext(c)
 	return h.service.FindAll(c.Request.Context(), params)
@@ -64,7 +64,7 @@ func (h *Handler) FindAll(c *gin.Context) (any, error) {
 // @Success      200  {object}  RoleResponse
 // @Failure      401  {object}  map[string]string "No autorizado"
 // @Failure      404  {object}  map[string]string "No encontrado"
-// @Router       /roles/{id} [get]
+// @Router       /api/roles/{id} [get]
 func (h *Handler) FindByID(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	return h.service.FindByID(c.Request.Context(), id)
@@ -83,7 +83,7 @@ func (h *Handler) FindByID(c *gin.Context) (any, error) {
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      401   {object}  map[string]string "No autorizado"
 // @Failure      404   {object}  map[string]string "No encontrado"
-// @Router       /roles/{id} [patch]
+// @Router       /api/roles/{id} [patch]
 func (h *Handler) Update(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	var dto UpdateRoleDTO
@@ -104,7 +104,7 @@ func (h *Handler) Update(c *gin.Context) (any, error) {
 // @Success      200  {object}  map[string]bool
 // @Failure      401  {object}  map[string]string "No autorizado"
 // @Failure      404  {object}  map[string]string "No encontrado"
-// @Router       /roles/{id} [delete]
+// @Router       /api/roles/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {

@@ -26,7 +26,7 @@ func NewHandler(service *Service) *Handler {
 // @Success      200   {object}  TokenResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      409   {object}  map[string]string "Email ya existe"
-// @Router       /auth/register [post]
+// @Router       /api/auth/register [post]
 func (h *Handler) Register(c *gin.Context) (any, error) {
 	var dto RegisterDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -46,7 +46,7 @@ func (h *Handler) Register(c *gin.Context) (any, error) {
 // @Success      200   {object}  TokenResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      401   {object}  map[string]string "Credenciales inválidas"
-// @Router       /auth/login [post]
+// @Router       /api/auth/login [post]
 func (h *Handler) Login(c *gin.Context) (any, error) {
 	var dto LoginDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -66,7 +66,7 @@ func (h *Handler) Login(c *gin.Context) (any, error) {
 // @Success      200   {object}  TokenResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      401   {object}  map[string]string "Token inválido"
-// @Router       /auth/refresh [post]
+// @Router       /api/auth/refresh [post]
 func (h *Handler) Refresh(c *gin.Context) (any, error) {
 	var dto RefreshDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -85,7 +85,7 @@ func (h *Handler) Refresh(c *gin.Context) (any, error) {
 // @Security     Bearer
 // @Success      200  {object}  UserInfo
 // @Failure      401  {object}  map[string]string "No autorizado"
-// @Router       /auth/me [get]
+// @Router       /api/auth/me [get]
 func (h *Handler) Me(c *gin.Context) (any, error) {
 	userID := sharedAuth.GetUserID(c)
 	if userID == "" {

@@ -24,7 +24,7 @@ func NewHandler(service *TenantService) *Handler {
 // @Success      200   {object}  TenantResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      409   {object}  map[string]string
-// @Router       /tenants [post]
+// @Router       /api/tenants [post]
 func (h *Handler) Create(c *gin.Context) (any, error) {
 	var dto CreateTenantDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -41,7 +41,7 @@ func (h *Handler) Create(c *gin.Context) (any, error) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {array}   TenantResponse
-// @Router       /tenants [get]
+// @Router       /api/tenants [get]
 func (h *Handler) FindAll(c *gin.Context) (any, error) {
 	return h.service.FindAll(c.Request.Context())
 }
@@ -55,7 +55,7 @@ func (h *Handler) FindAll(c *gin.Context) (any, error) {
 // @Param        id   path      string  true  "Tenant ID"
 // @Success      200  {object}  TenantResponse
 // @Failure      404  {object}  map[string]string
-// @Router       /tenants/{id} [get]
+// @Router       /api/tenants/{id} [get]
 func (h *Handler) FindByID(c *gin.Context) (any, error) {
 	id := c.Param("id")
 	return h.service.FindByID(c.Request.Context(), id)
@@ -72,7 +72,7 @@ func (h *Handler) FindByID(c *gin.Context) (any, error) {
 // @Success      200   {object}  TenantResponse
 // @Failure      400   {object}  validation.ValidationError
 // @Failure      404   {object}  map[string]string
-// @Router       /tenants/{id} [patch]
+// @Router       /api/tenants/{id} [patch]
 func (h *Handler) Update(c *gin.Context) (any, error) {
 	id := c.Param("id")
 
@@ -93,7 +93,7 @@ func (h *Handler) Update(c *gin.Context) (any, error) {
 // @Param        id   path      string  true  "Tenant ID"
 // @Success      200  {object}  map[string]bool
 // @Failure      404  {object}  map[string]string
-// @Router       /tenants/{id} [delete]
+// @Router       /api/tenants/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) (any, error) {
 	id := c.Param("id")
 
