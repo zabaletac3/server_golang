@@ -14,6 +14,7 @@ import (
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/health"
 	"github.com/eren_dev/go_server/internal/platform/logger"
+	"github.com/eren_dev/go_server/internal/platform/notifications/fcm"
 	"github.com/eren_dev/go_server/internal/platform/payment"
 	"github.com/eren_dev/go_server/internal/platform/payment/wompi"
 	"github.com/eren_dev/go_server/internal/shared/database"
@@ -100,9 +101,16 @@ func main() {
 	//     paymentManager.RegisterProvider(stripeProvider)
 	// }
 
+	// Initialize FCM push provider
+	pushProvider, err := fcm.NewProvider(ctx, cfg)
+	if err != nil {
+		logger.Default().Error(context.Background(), "fcm_init_failed", "error", err)
+		os.Exit(1)
+	}
+
 	workers := lifecycle.NewWorkers()
 
-	server, err := app.NewServer(cfg, db, paymentManager)
+	server, err := app.NewServer(cfg, db, paymentManager, pushProvider)
 	if err != nil {
 		logger.Default().Error(context.Background(), "server_error", "error", err)
 		os.Exit(1)

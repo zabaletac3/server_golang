@@ -1,22 +1,22 @@
-package auth
+package mobile_auth
 
 import (
 	"context"
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/eren_dev/go_server/internal/modules/users"
-	"github.com/eren_dev/go_server/internal/shared/auth"
+	"github.com/eren_dev/go_server/internal/modules/owners"
+	sharedAuth "github.com/eren_dev/go_server/internal/shared/auth"
 )
 
 type Service struct {
-	userRepo   users.UserRepository
-	jwtService *auth.JWTService
+	ownerRepo  owners.OwnerRepository
+	jwtService *sharedAuth.JWTService
 }
 
-func NewService(userRepo users.UserRepository, jwtService *auth.JWTService) *Service {
+func NewService(ownerRepo owners.OwnerRepository, jwtService *sharedAuth.JWTService) *Service {
 	return &Service{
-		userRepo:   userRepo,
+		ownerRepo:  ownerRepo,
 		jwtService: jwtService,
 	}
 }
@@ -27,15 +27,20 @@ func (s *Service) Register(ctx context.Context, dto *RegisterDTO) (*TokenRespons
 		return nil, err
 	}
 
-	user, err := s.userRepo.CreateWithPassword(ctx, dto.Name, dto.Email, string(hashedPassword))
+	owner, err := s.ownerRepo.Create(ctx, &owners.CreateOwnerDTO{
+		Name:     dto.Name,
+		Email:    dto.Email,
+		Phone:    dto.Phone,
+		Password: string(hashedPassword),
+	})
 	if err != nil {
-		if err == users.ErrEmailExists {
+		if err == owners.ErrEmailExists {
 			return nil, ErrEmailExists
 		}
 		return nil, err
 	}
 
-	tokens, err := s.jwtService.GenerateTokenPair(user.ID.Hex(), user.Email, auth.UserTypeStaff)
+	tokens, err := s.jwtService.GenerateTokenPair(owner.ID.Hex(), owner.Email, sharedAuth.UserTypeOwner)
 	if err != nil {
 		return nil, err
 	}
@@ -48,19 +53,19 @@ func (s *Service) Register(ctx context.Context, dto *RegisterDTO) (*TokenRespons
 }
 
 func (s *Service) Login(ctx context.Context, dto *LoginDTO) (*TokenResponse, error) {
-	user, err := s.userRepo.FindByEmail(ctx, dto.Email)
+	owner, err := s.ownerRepo.FindByEmail(ctx, dto.Email)
 	if err != nil {
-		if err == users.ErrUserNotFound {
+		if err == owners.ErrOwnerNotFound {
 			return nil, ErrInvalidCredentials
 		}
 		return nil, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(owner.Password), []byte(dto.Password)); err != nil {
 		return nil, ErrInvalidCredentials
 	}
 
-	tokens, err := s.jwtService.GenerateTokenPair(user.ID.Hex(), user.Email, auth.UserTypeStaff)
+	tokens, err := s.jwtService.GenerateTokenPair(owner.ID.Hex(), owner.Email, sharedAuth.UserTypeOwner)
 	if err != nil {
 		return nil, err
 	}
@@ -85,15 +90,16 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (*TokenRespo
 	}, nil
 }
 
-func (s *Service) GetUserInfo(ctx context.Context, userID string) (*UserInfo, error) {
-	user, err := s.userRepo.FindByID(ctx, userID)
+func (s *Service) GetOwnerInfo(ctx context.Context, ownerID string) (*OwnerInfo, error) {
+	owner, err := s.ownerRepo.FindByID(ctx, ownerID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &UserInfo{
-		ID:    user.ID.Hex(),
-		Name:  user.Name,
-		Email: user.Email,
+	return &OwnerInfo{
+		ID:    owner.ID.Hex(),
+		Name:  owner.Name,
+		Email: owner.Email,
+		Phone: owner.Phone,
 	}, nil
 }

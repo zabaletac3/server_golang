@@ -112,6 +112,243 @@ definitions:
         example: John Doe
         type: string
     type: object
+  internal_modules_mobile_auth.LoginDTO:
+    properties:
+      email:
+        example: juan@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_modules_mobile_auth.OwnerInfo:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  internal_modules_mobile_auth.RefreshDTO:
+    properties:
+      refresh_token:
+        example: eyJhbGci...
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_modules_mobile_auth.RegisterDTO:
+    properties:
+      email:
+        example: juan@example.com
+        type: string
+      name:
+        example: Juan Pérez
+        minLength: 2
+        type: string
+      password:
+        example: secret123
+        minLength: 6
+        type: string
+      phone:
+        example: +57 300 123 4567
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  internal_modules_mobile_auth.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+    type: object
+  internal_modules_notifications.NotificationResponse:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      data:
+        additionalProperties:
+          type: string
+        type: object
+      id:
+        type: string
+      push_sent:
+        type: boolean
+      read:
+        type: boolean
+      read_at:
+        type: string
+      title:
+        type: string
+      type:
+        $ref: '#/definitions/internal_modules_notifications.NotificationType'
+    type: object
+  internal_modules_notifications.NotificationType:
+    enum:
+    - appointment_confirmed
+    - appointment_cancelled
+    - appointment_reminder
+    - vaccination_due
+    - medical_record_updated
+    - prescription_ready
+    - general
+    type: string
+    x-enum-varnames:
+    - TypeAppointmentConfirmed
+    - TypeAppointmentCancelled
+    - TypeAppointmentReminder
+    - TypeVaccinationDue
+    - TypeMedicalRecordUpdated
+    - TypePrescriptionReady
+    - TypeGeneral
+  internal_modules_notifications.PaginatedNotificationsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/internal_modules_notifications.NotificationResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo'
+    type: object
+  internal_modules_notifications.PaginatedStaffNotificationsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/internal_modules_notifications.StaffNotificationResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo'
+    type: object
+  internal_modules_notifications.StaffNotificationResponse:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      data:
+        additionalProperties:
+          type: string
+        type: object
+      id:
+        type: string
+      read:
+        type: boolean
+      read_at:
+        type: string
+      title:
+        type: string
+      type:
+        $ref: '#/definitions/internal_modules_notifications.StaffNotificationType'
+    type: object
+  internal_modules_notifications.StaffNotificationType:
+    enum:
+    - new_appointment
+    - payment_received
+    - new_patient
+    - system_alert
+    - general
+    type: string
+    x-enum-varnames:
+    - TypeStaffNewAppointment
+    - TypeStaffPaymentReceived
+    - TypeStaffNewPatient
+    - TypeStaffSystemAlert
+    - TypeStaffGeneral
+  internal_modules_notifications.UnreadCountResponse:
+    properties:
+      count:
+        type: integer
+    type: object
+  internal_modules_owners.OwnerResponse:
+    properties:
+      address:
+        type: string
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      push_tokens:
+        items:
+          $ref: '#/definitions/internal_modules_owners.PushTokenResponse'
+        type: array
+      tenant_ids:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  internal_modules_owners.PaginatedOwnersResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/internal_modules_owners.OwnerResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo'
+    type: object
+  internal_modules_owners.PushTokenResponse:
+    properties:
+      active:
+        type: boolean
+      platform:
+        type: string
+      token:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_owners.RegisterPushTokenDTO:
+    properties:
+      platform:
+        enum:
+        - ios
+        - android
+        example: android
+        type: string
+      token:
+        example: fcm-token-abc123
+        type: string
+    required:
+    - platform
+    - token
+    type: object
+  internal_modules_owners.UpdateOwnerDTO:
+    properties:
+      address:
+        example: 'Calle 10 # 20-30, Medellín'
+        type: string
+      avatar_url:
+        example: https://cdn.example.com/avatar.jpg
+        type: string
+      name:
+        example: Juan Pérez
+        type: string
+      phone:
+        example: +57 300 123 4567
+        type: string
+    type: object
   internal_modules_payments.CreatePaymentDTO:
     properties:
       amount:
@@ -922,6 +1159,105 @@ info:
   title: Go Server API
   version: "1.0"
 paths:
+  /api/notifications:
+    get:
+      parameters:
+      - description: Skip
+        in: query
+        name: skip
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_notifications.PaginatedStaffNotificationsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List my notifications (staff)
+      tags:
+      - admin/notifications
+  /api/notifications/{id}/read:
+    patch:
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Mark notification as read (staff)
+      tags:
+      - admin/notifications
+  /api/notifications/read-all:
+    patch:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Mark all notifications as read (staff)
+      tags:
+      - admin/notifications
+  /api/notifications/unread-count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_notifications.UnreadCountResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Unread notification count (staff)
+      tags:
+      - admin/notifications
   /auth/login:
     post:
       consumes:
@@ -1041,6 +1377,413 @@ paths:
       summary: Registrar usuario
       tags:
       - auth
+  /mobile/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_mobile_auth.LoginDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_mobile_auth.TokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login (owner)
+      tags:
+      - mobile/auth
+  /mobile/auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_mobile_auth.OwnerInfo'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get current owner
+      tags:
+      - mobile/auth
+  /mobile/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_mobile_auth.RefreshDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_mobile_auth.TokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh token (owner)
+      tags:
+      - mobile/auth
+  /mobile/auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Registration data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_mobile_auth.RegisterDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_mobile_auth.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register (owner)
+      tags:
+      - mobile/auth
+  /mobile/notifications:
+    get:
+      parameters:
+      - description: Skip
+        in: query
+        name: skip
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_notifications.PaginatedNotificationsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List my notifications
+      tags:
+      - mobile/notifications
+  /mobile/notifications/{id}/read:
+    patch:
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Mark notification as read
+      tags:
+      - mobile/notifications
+  /mobile/notifications/read-all:
+    patch:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Mark all notifications as read
+      tags:
+      - mobile/notifications
+  /mobile/notifications/unread-count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_notifications.UnreadCountResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Unread notification count
+      tags:
+      - mobile/notifications
+  /mobile/owners/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_owners.OwnerResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get my profile
+      tags:
+      - mobile/owners
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Profile data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_owners.UpdateOwnerDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_owners.OwnerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update my profile
+      tags:
+      - mobile/owners
+  /mobile/owners/me/push-tokens:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Push token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_owners.RegisterPushTokenDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Register push token
+      tags:
+      - mobile/owners
+  /mobile/owners/me/push-tokens/{token}:
+    delete:
+      parameters:
+      - description: Push token value
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Remove push token
+      tags:
+      - mobile/owners
+  /owners:
+    get:
+      parameters:
+      - description: Skip
+        in: query
+        name: skip
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_owners.PaginatedOwnersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List owners
+      tags:
+      - owners
+  /owners/{id}:
+    delete:
+      parameters:
+      - description: Owner ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete owner
+      tags:
+      - owners
+    get:
+      parameters:
+      - description: Owner ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_owners.OwnerResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get owner by ID
+      tags:
+      - owners
   /payments:
     post:
       consumes:

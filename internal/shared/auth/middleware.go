@@ -12,8 +12,9 @@ import (
 type contextKey string
 
 const (
-	UserIDKey contextKey = "user_id"
-	EmailKey  contextKey = "email"
+	UserIDKey   contextKey = "user_id"
+	EmailKey    contextKey = "email"
+	UserTypeKey contextKey = "user_type"
 )
 
 func JWTMiddleware(cfg *config.Config) gin.HandlerFunc {
@@ -57,6 +58,7 @@ func JWTMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 		c.Set(string(UserIDKey), claims.UserID)
 		c.Set(string(EmailKey), claims.Email)
+		c.Set(string(UserTypeKey), string(claims.UserType))
 
 		c.Next()
 	}
@@ -68,4 +70,8 @@ func GetUserID(c *gin.Context) string {
 
 func GetEmail(c *gin.Context) string {
 	return c.GetString(string(EmailKey))
+}
+
+func GetUserType(c *gin.Context) string {
+	return c.GetString(string(UserTypeKey))
 }

@@ -15,15 +15,22 @@ var (
 )
 
 type TokenType string
+type UserType string
 
 const (
 	AccessToken  TokenType = "access"
 	RefreshToken TokenType = "refresh"
 )
 
+const (
+	UserTypeStaff UserType = "staff"
+	UserTypeOwner UserType = "owner"
+)
+
 type Claims struct {
 	UserID    string    `json:"user_id"`
 	Email     string    `json:"email"`
+	UserType  UserType  `json:"user_type"`
 	TokenType TokenType `json:"token_type"`
 	jwt.RegisteredClaims
 }
@@ -48,13 +55,13 @@ type TokenPair struct {
 	ExpiresIn    int64  `json:"expires_in"`
 }
 
-func (s *JWTService) GenerateTokenPair(userID, email string) (*TokenPair, error) {
-	accessToken, err := s.generateToken(userID, email, AccessToken, s.expiration)
+func (s *JWTService) GenerateTokenPair(userID, email string, userType UserType) (*TokenPair, error) {
+	accessToken, err := s.generateToken(userID, email, userType, AccessToken, s.expiration)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.generateToken(userID, email, RefreshToken, s.refreshExpiration)
+	refreshToken, err := s.generateToken(userID, email, userType, RefreshToken, s.refreshExpiration)
 	if err != nil {
 		return nil, err
 	}
@@ -66,11 +73,12 @@ func (s *JWTService) GenerateTokenPair(userID, email string) (*TokenPair, error)
 	}, nil
 }
 
-func (s *JWTService) generateToken(userID, email string, tokenType TokenType, expiration time.Duration) (string, error) {
+func (s *JWTService) generateToken(userID, email string, userType UserType, tokenType TokenType, expiration time.Duration) (string, error) {
 	now := time.Now()
 	claims := Claims{
 		UserID:    userID,
 		Email:     email,
+		UserType:  userType,
 		TokenType: tokenType,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(expiration)),
@@ -116,5 +124,5 @@ func (s *JWTService) RefreshAccessToken(refreshToken string) (*TokenPair, error)
 		return nil, err
 	}
 
-	return s.GenerateTokenPair(claims.UserID, claims.Email)
+	return s.GenerateTokenPair(claims.UserID, claims.Email, claims.UserType)
 }

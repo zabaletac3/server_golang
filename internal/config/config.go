@@ -66,6 +66,9 @@ type Config struct {
 	WompiWebhookSecret     string
 	StripeAPIKey           string
 	StripeWebhookSecret    string
+
+	// Firebase / Push Notifications
+	FirebaseCredentialsPath string
 }
 
 func Load() *Config {
@@ -127,6 +130,8 @@ func Load() *Config {
 		WompiWebhookSecret:     getEnv("WOMPI_WEBHOOK_SECRET", ""),
 		StripeAPIKey:           getEnv("STRIPE_API_KEY", ""),
 		StripeWebhookSecret:    getEnv("STRIPE_WEBHOOK_SECRET", ""),
+
+		FirebaseCredentialsPath: getEnv("FIREBASE_CREDENTIALS_PATH", ""),
 	}
 }
 

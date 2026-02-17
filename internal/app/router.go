@@ -5,6 +5,9 @@ import (
 
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/auth"
+	mobileAuth "github.com/eren_dev/go_server/internal/modules/mobile_auth"
+	"github.com/eren_dev/go_server/internal/modules/notifications"
+	"github.com/eren_dev/go_server/internal/modules/owners"
 	"github.com/eren_dev/go_server/internal/modules/payments"
 	"github.com/eren_dev/go_server/internal/modules/permissions"
 	"github.com/eren_dev/go_server/internal/modules/plans"
@@ -13,6 +16,7 @@ import (
 	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/modules/users"
 	"github.com/eren_dev/go_server/internal/modules/webhooks"
+	platformNotifications "github.com/eren_dev/go_server/internal/platform/notifications"
 	"github.com/eren_dev/go_server/internal/platform/payment"
 	sharedAuth "github.com/eren_dev/go_server/internal/shared/auth"
 	"github.com/eren_dev/go_server/internal/shared/database"
@@ -20,7 +24,7 @@ import (
 	sharedMiddleware "github.com/eren_dev/go_server/internal/shared/middleware"
 )
 
-func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config, paymentManager *payment.PaymentManager) {
+func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config, paymentManager *payment.PaymentManager, pushProvider platformNotifications.PushProvider) {
 	r := httpx.NewRouter(engine)
 
 	// Public routes (sin autenticación)
@@ -34,8 +38,14 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 	private := r.Group("/api")
 	private.Use(sharedAuth.JWTMiddleware(cfg))
 
+	// Mobile routes: /mobile/auth/... y /mobile/owners/...
+	mobilePublic := r.Group("/mobile")
+	mobilePrivate := r.Group("/mobile")
+	mobilePrivate.Use(sharedAuth.JWTMiddleware(cfg))
+	mobilePrivate.Use(sharedMiddleware.OwnerGuardMiddleware())
+
 	if db != nil {
-		// RBAC middleware aplicado solo a rutas de recursos
+		// RBAC middleware aplicado solo a rutas de staff
 		private.Use(sharedMiddleware.RBACMiddleware(sharedMiddleware.RBACConfig{
 			UserRepo:       users.NewRepository(db),
 			RoleRepo:       roles.NewRepository(db),
@@ -43,11 +53,14 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 			ResourceRepo:   resources.NewRepository(db),
 		}))
 
-		// Auth module: rutas públicas + /auth/me sin RBAC
+		// Staff auth: rutas públicas + /auth/me sin RBAC
 		auth.RegisterRoutes(public, authPrivate, db, cfg)
 
 		// Users module (JWT + RBAC)
 		users.RegisterRoutes(private, db)
+
+		// Owners admin routes (JWT + RBAC)
+		owners.RegisterAdminRoutes(private, db)
 
 		// Tenant module (JWT + RBAC)
 		tenant.RegisterRoutes(private, db, paymentManager)
@@ -65,5 +78,17 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		resources.RegisterRoutes(private, db)
 		permissions.RegisterRoutes(private, db)
 		roles.RegisterRoutes(private, db)
+
+		// Mobile auth routes (public + owner-private)
+		mobileAuth.RegisterRoutes(mobilePublic, mobilePrivate, db, cfg)
+
+		// Mobile owner profile routes (owner-private)
+		owners.RegisterMobileRoutes(mobilePrivate, db)
+
+		// Mobile notifications (owner-private)
+		notifications.RegisterMobileRoutes(mobilePrivate, db, pushProvider)
+
+		// Admin notifications (JWT only, no RBAC — any staff member can read their own)
+		notifications.RegisterAdminRoutes(authPrivate, db, pushProvider)
 	}
 }
