@@ -154,7 +154,7 @@ func (r *userRepository) FindByID(ctx context.Context, id string) (*User, error)
 
 func (r *userRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	var user User
-	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	err := r.collection.FindOne(ctx, bson.M{"email": email, "deleted_at": nil}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, ErrUserNotFound

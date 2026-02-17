@@ -7,7 +7,7 @@ DOCS_DIR=internal/app/docs
 AIR_BIN=$(shell go env GOPATH)/bin/air
 SWAG_BIN=$(shell go env GOPATH)/bin/swag
 
-.PHONY: dev build run clean test lint docs docker-build docker-up docker-down docker-logs logs-up logs-down
+.PHONY: dev build run clean test lint docs seed docker-build docker-up docker-down docker-logs logs-up logs-down
 
 ## 📚 Generar documentación Swagger
 docs:

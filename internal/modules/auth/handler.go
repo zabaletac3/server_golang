@@ -3,7 +3,8 @@ package auth
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/eren_dev/go_server/internal/shared/auth"
+	sharedAuth "github.com/eren_dev/go_server/internal/shared/auth"
+	sharedErrors "github.com/eren_dev/go_server/internal/shared/errors"
 	"github.com/eren_dev/go_server/internal/shared/validation"
 )
 
@@ -86,6 +87,9 @@ func (h *Handler) Refresh(c *gin.Context) (any, error) {
 // @Failure      401  {object}  map[string]string "No autorizado"
 // @Router       /auth/me [get]
 func (h *Handler) Me(c *gin.Context) (any, error) {
-	userID := auth.GetUserID(c)
+	userID := sharedAuth.GetUserID(c)
+	if userID == "" {
+		return nil, sharedErrors.ErrUnauthorized
+	}
 	return h.service.GetUserInfo(c.Request.Context(), userID)
 }

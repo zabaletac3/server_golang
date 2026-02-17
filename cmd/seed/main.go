@@ -13,6 +13,7 @@ import (
 	"github.com/eren_dev/go_server/internal/modules/plans"
 	"github.com/eren_dev/go_server/internal/modules/resources"
 	"github.com/eren_dev/go_server/internal/modules/roles"
+	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/modules/users"
 	"github.com/eren_dev/go_server/internal/shared/database"
 )
@@ -34,13 +35,15 @@ func main() {
 	// Crear logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	// Crear repositorios y servicios
+	// Crear repositorios
 	userRepo := users.NewRepository(db)
 	planRepo := plans.NewPlanRepository(db)
+	tenantRepo := tenant.NewTenantRepository(db)
 	resourceRepo := resources.NewRepository(db)
 	permissionRepo := permissions.NewRepository(db)
 	roleRepo := roles.NewRepository(db)
-	seedService := NewSeedService(userRepo, planRepo, resourceRepo, permissionRepo, roleRepo, logger)
+
+	seedService := NewSeedService(db, userRepo, planRepo, tenantRepo, resourceRepo, permissionRepo, roleRepo, logger)
 
 	// Ejecutar seeds
 	ctx := context.Background()

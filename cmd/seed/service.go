@@ -5,19 +5,26 @@ import (
 	"log/slog"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/eren_dev/go_server/internal/modules/permissions"
 	"github.com/eren_dev/go_server/internal/modules/plans"
 	"github.com/eren_dev/go_server/internal/modules/resources"
 	"github.com/eren_dev/go_server/internal/modules/roles"
+	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/modules/users"
+	"github.com/eren_dev/go_server/internal/shared/database"
 )
 
 type SeedService struct {
+	db             *database.MongoDB
 	userRepo       users.UserRepository
 	planRepo       plans.PlanRepository
+	tenantRepo     tenant.TenantRepository
 	resourceRepo   resources.ResourceRepository
 	permissionRepo permissions.PermissionRepository
 	roleRepo       roles.RoleRepository
@@ -25,21 +32,89 @@ type SeedService struct {
 }
 
 func NewSeedService(
+	db *database.MongoDB,
 	userRepo users.UserRepository,
 	planRepo plans.PlanRepository,
+	tenantRepo tenant.TenantRepository,
 	resourceRepo resources.ResourceRepository,
 	permissionRepo permissions.PermissionRepository,
 	roleRepo roles.RoleRepository,
 	logger *slog.Logger,
 ) *SeedService {
 	return &SeedService{
+		db:             db,
 		userRepo:       userRepo,
 		planRepo:       planRepo,
+		tenantRepo:     tenantRepo,
 		resourceRepo:   resourceRepo,
 		permissionRepo: permissionRepo,
 		roleRepo:       roleRepo,
 		logger:         logger,
 	}
+}
+
+// runMigrations elimina índices huérfanos y crea los correctos
+func (s *SeedService) runMigrations(ctx context.Context) error {
+	// 1. Eliminar índices obsoletos (globales o sin partial filter)
+	type dropMigration struct {
+		collection string
+		index      string
+	}
+	drops := []dropMigration{
+		{"plans", "slug_1"},
+		{"roles", "name_1"},
+		{"roles", "tenant_id_1_name_1"},      // drop non-partial version if it exists
+		{"resources", "name_1"},
+		{"resources", "tenant_id_1_name_1"},  // drop non-partial version if it exists
+	}
+	for _, m := range drops {
+		col := s.db.Collection(m.collection)
+		if _, err := col.Indexes().DropOne(ctx, m.index); err != nil {
+			s.logger.Info("index not found or already dropped", "collection", m.collection, "index", m.index)
+		} else {
+			s.logger.Info("dropped orphaned index", "collection", m.collection, "index", m.index)
+		}
+	}
+
+	// 2. Crear índices compuestos con partial filter (solo docs activos, deleted_at=nil)
+	// Esto permite que documentos soft-deleted no bloqueen nuevas inserciones con el mismo nombre.
+	type createMigration struct {
+		collection string
+		keys       bson.D
+		name       string
+		partial    bson.D
+	}
+	creates := []createMigration{
+		{
+			collection: "roles",
+			keys:       bson.D{{Key: "tenant_id", Value: 1}, {Key: "name", Value: 1}},
+			name:       "tenant_id_1_name_1_active",
+			partial:    bson.D{{Key: "deleted_at", Value: bson.D{{Key: "$eq", Value: nil}}}},
+		},
+		{
+			collection: "resources",
+			keys:       bson.D{{Key: "tenant_id", Value: 1}, {Key: "name", Value: 1}},
+			name:       "tenant_id_1_name_1_active",
+			partial:    bson.D{{Key: "deleted_at", Value: bson.D{{Key: "$eq", Value: nil}}}},
+		},
+	}
+	for _, m := range creates {
+		col := s.db.Collection(m.collection)
+		_, err := col.Indexes().CreateOne(ctx, mongo.IndexModel{
+			Keys: m.keys,
+			Options: options.Index().
+				SetUnique(true).
+				SetName(m.name).
+				SetPartialFilterExpression(m.partial),
+		})
+		if err != nil {
+			s.logger.Info("index already exists or could not be created", "collection", m.collection, "index", m.name)
+		} else {
+			s.logger.Info("created partial composite index", "collection", m.collection, "index", m.name)
+		}
+	}
+
+	return nil
 }
 
 type SuperAdminData struct {
@@ -72,21 +147,18 @@ func (s *SeedService) SeedSuperAdmins(ctx context.Context) error {
 	}
 
 	for _, admin := range superAdmins {
-		// Verificar si el usuario ya existe
 		existingUser, _ := s.userRepo.FindByEmail(ctx, admin.Email)
 		if existingUser != nil {
 			s.logger.Info("super admin already exists", "email", admin.Email)
 			continue
 		}
 
-		// Hash password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(admin.Password), bcrypt.DefaultCost)
 		if err != nil {
 			s.logger.Error("failed to hash password", "email", admin.Email, "error", err)
 			return err
 		}
 
-		// Crear usuario super admin
 		now := time.Now()
 		user := &users.User{
 			ID:           primitive.NewObjectID(),
@@ -96,6 +168,7 @@ func (s *SeedService) SeedSuperAdmins(ctx context.Context) error {
 			Password:     string(hashedPassword),
 			IsSuperAdmin: true,
 			TenantIds:    []primitive.ObjectID{},
+			RoleIds:      []primitive.ObjectID{},
 			CreatedAt:    now,
 			UpdatedAt:    now,
 		}
@@ -106,7 +179,7 @@ func (s *SeedService) SeedSuperAdmins(ctx context.Context) error {
 			return err
 		}
 
-		s.logger.Info("super admin created successfully", "email", admin.Email, "name", admin.Name)
+		s.logger.Info("super admin created", "email", admin.Email, "name", admin.Name)
 	}
 
 	return nil
@@ -117,7 +190,7 @@ func (s *SeedService) SeedPlans(ctx context.Context) error {
 		{
 			Name:           "Básico",
 			Description:    "Plan ideal para pequeños consultorios y veterinarios independientes.",
-			MonthlyPrice:   0, // Gratis por ahora o bajo costo
+			MonthlyPrice:   0,
 			AnnualPrice:    0,
 			Currency:       "COP",
 			MaxUsers:       1,
@@ -133,8 +206,8 @@ func (s *SeedService) SeedPlans(ctx context.Context) error {
 		{
 			Name:           "Pro",
 			Description:    "Para clínicas en crecimiento que necesitan más control y usuarios.",
-			MonthlyPrice:   4900000, // $49.000 COP (en centavos) -> Ajustar según lógica de precios
-			AnnualPrice:    49000000, // $490.000 COP
+			MonthlyPrice:   4900000,
+			AnnualPrice:    49000000,
 			Currency:       "COP",
 			MaxUsers:       5,
 			MaxBranches:    1,
@@ -151,8 +224,8 @@ func (s *SeedService) SeedPlans(ctx context.Context) error {
 		{
 			Name:           "Empresarial",
 			Description:    "Solución completa para hospitales veterinarios y cadenas.",
-			MonthlyPrice:   14900000, // $149.000 COP
-			AnnualPrice:    149000000, // $1.490.000 COP
+			MonthlyPrice:   14900000,
+			AnnualPrice:    149000000,
 			Currency:       "COP",
 			MaxUsers:       20,
 			MaxBranches:    3,
@@ -168,7 +241,6 @@ func (s *SeedService) SeedPlans(ctx context.Context) error {
 		},
 	}
 
-	// Verificar si ya existen planes, si no, crearlos
 	existingPlans, err := s.planRepo.FindAll(ctx)
 	if err != nil {
 		s.logger.Error("failed to list plans", "error", err)
@@ -189,25 +261,61 @@ func (s *SeedService) SeedPlans(ctx context.Context) error {
 			s.logger.Error("failed to create plan", "name", p.Name, "error", err)
 			return err
 		}
-		s.logger.Info("plan created successfully", "name", p.Name)
+		s.logger.Info("plan created", "name", p.Name)
 	}
 
 	return nil
 }
 
-// RunSeeds ejecuta todos los seeds
+// getPlanMap retorna un mapa nombre -> ObjectID de los planes existentes
+func (s *SeedService) getPlanMap(ctx context.Context) (map[string]primitive.ObjectID, error) {
+	allPlans, err := s.planRepo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	planMap := make(map[string]primitive.ObjectID, len(allPlans))
+	for _, p := range allPlans {
+		planMap[p.Name] = p.ID
+	}
+	return planMap, nil
+}
+
 func (s *SeedService) RunSeeds(ctx context.Context) error {
 	s.logger.Info("starting database seeding...")
 
+	// 0. Migraciones previas (limpiar índices huérfanos)
+	if err := s.runMigrations(ctx); err != nil {
+		return err
+	}
+
+	// 1. Super admins de plataforma
 	if err := s.SeedSuperAdmins(ctx); err != nil {
 		return err
 	}
 
+	// 2. Planes de suscripción
 	if err := s.SeedPlans(ctx); err != nil {
 		return err
 	}
 
-	if err := s.SeedRBAC(ctx); err != nil {
+	// 3. RBAC por tenant (recursos, permisos y roles)
+	tenantIDs := []primitive.ObjectID{tenant1ID, tenant2ID}
+	rolesByTenant, err := s.SeedRBAC(ctx, tenantIDs)
+	if err != nil {
+		return err
+	}
+
+	// 4. Tenants (clínicas)
+	planMap, err := s.getPlanMap(ctx)
+	if err != nil {
+		return err
+	}
+	if err := s.SeedTenants(ctx, planMap); err != nil {
+		return err
+	}
+
+	// 5. Usuarios por tenant con sus roles asignados
+	if err := s.SeedTenantUsers(ctx, rolesByTenant); err != nil {
 		return err
 	}
 
