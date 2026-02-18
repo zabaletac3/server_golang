@@ -15,15 +15,15 @@ const (
 
 // SubscriptionRequest datos para crear suscripción
 type SubscriptionRequest struct {
-	TenantID       string
-	PlanID         string
-	CustomerEmail  string
-	CustomerName   string
-	PaymentMethod  string
-	BillingPeriod  string // monthly, annual
-	Amount         int64  // en centavos
-	Currency       string
-	TrialDays      int
+	TenantID      string
+	PlanID        string
+	PlanName      string
+	CustomerEmail string
+	CustomerName  string
+	BillingPeriod string // monthly, annual
+	Amount        int64  // en centavos
+	Currency      string
+	RedirectURL   string // URL de redirección post-pago
 }
 
 // SubscriptionResponse respuesta de suscripción creada
@@ -34,6 +34,7 @@ type SubscriptionResponse struct {
 	NextBillingAt  *time.Time
 	Amount         int64
 	Currency       string
+	PaymentLinkURL string // URL de checkout para redirigir al usuario
 }
 
 // WebhookEvent evento de webhook

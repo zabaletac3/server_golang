@@ -53,6 +53,18 @@ type UpdateStatusTenantDTO struct {
 	Status TenantStatus `json:"status" binding:"required" example:"active"`
 }
 
+// SubscribeDTO request para suscribirse a un plan
+type SubscribeDTO struct {
+	PlanID        string `json:"plan_id" binding:"required" example:"507f1f77bcf86cd799439011"`
+	BillingPeriod string `json:"billing_period" binding:"required,oneof=monthly annual" example:"monthly"`
+}
+
+// SubscribeResponse respuesta de suscripción con link de pago
+type SubscribeResponse struct {
+	PaymentLinkURL string `json:"payment_link_url" example:"https://checkout.wompi.co/l/abc123"`
+	PaymentID      string `json:"payment_id" example:"507f1f77bcf86cd799439011"`
+}
+
 // TenantSubscriptionResponse respuesta de suscripción
 type TenantSubscriptionResponse struct {
 	PlanID                 string     `json:"plan_id,omitempty"`

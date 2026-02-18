@@ -1,33 +1,37 @@
 package webhooks
 
 import (
+	"context"
 	"io"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/eren_dev/go_server/internal/modules/payments"
+	"github.com/eren_dev/go_server/internal/modules/plans"
 	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/platform/logger"
 	"github.com/eren_dev/go_server/internal/platform/payment"
 )
 
 type WebhookHandler struct {
-	paymentManager  *payment.PaymentManager
-	paymentService  *payments.PaymentService
-	tenantRepo      tenant.TenantRepository
+	paymentManager *payment.PaymentManager
+	paymentService *payments.PaymentService
+	tenantRepo     tenant.TenantRepository
+	planRepo       plans.PlanRepository
 }
 
 func NewWebhookHandler(
 	paymentManager *payment.PaymentManager,
 	paymentService *payments.PaymentService,
 	tenantRepo tenant.TenantRepository,
+	planRepo plans.PlanRepository,
 ) *WebhookHandler {
 	return &WebhookHandler{
 		paymentManager: paymentManager,
 		paymentService: paymentService,
 		tenantRepo:     tenantRepo,
+		planRepo:       planRepo,
 	}
 }
 
@@ -43,20 +47,20 @@ func NewWebhookHandler(
 // @Router       /api/webhooks/{provider} [post]
 func (h *WebhookHandler) ProcessWebhook(c *gin.Context) (any, error) {
 	providerName := c.Param("provider")
-	
+
 	// Leer el body raw para validación de firma
 	bodyBytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		logger.Default().Error(c.Request.Context(), "webhook_read_error", "error", err)
 		return nil, err
 	}
-	
+
 	// Obtener firma del header (puede variar según provider)
 	signature := c.GetHeader("X-Signature")
 	if signature == "" {
 		signature = c.GetHeader("X-Wompi-Signature")
 	}
-	
+
 	// Convertir provider name a tipo
 	var providerType payment.ProviderType
 	switch providerName {
@@ -68,107 +72,97 @@ func (h *WebhookHandler) ProcessWebhook(c *gin.Context) (any, error) {
 		logger.Default().Error(c.Request.Context(), "unknown_provider", "provider", providerName)
 		return gin.H{"error": "unknown provider"}, nil
 	}
-	
+
 	// Procesar webhook usando el PaymentManager
 	event, err := h.paymentManager.ProcessWebhook(c.Request.Context(), providerType, bodyBytes, signature)
 	if err != nil {
 		logger.Default().Error(c.Request.Context(), "webhook_processing_error", "error", err, "provider", providerName)
 		return nil, err
 	}
-	
-	logger.Default().Info(c.Request.Context(), "webhook_received", 
+
+	logger.Default().Info(c.Request.Context(), "webhook_received",
 		"provider", providerName,
 		"event_type", event.EventType,
 		"transaction_id", event.TransactionID,
 		"status", event.Status,
 	)
-	
+
 	// Procesar el evento según el tipo
-	if err := h.handleWebhookEvent(c.Request.Context(), event); err != nil {
-		logger.Default().Error(c.Request.Context(), "webhook_handler_error", "error", err)
+	ctx := context.Background()
+	if err := h.handleWebhookEvent(ctx, event); err != nil {
+		logger.Default().Error(ctx, "webhook_handler_error", "error", err)
 		// No retornamos error al provider para evitar reintentos
 	}
-	
+
 	return gin.H{
 		"status": "received",
 		"event":  event.EventType,
 	}, nil
 }
 
-func (h *WebhookHandler) handleWebhookEvent(ctx any, event *payment.WebhookEvent) error {
+func (h *WebhookHandler) handleWebhookEvent(ctx context.Context, event *payment.WebhookEvent) error {
 	switch event.EventType {
 	case "payment.succeeded", "transaction.updated":
-		return h.handlePaymentSucceeded(event)
+		if event.Status == "APPROVED" {
+			return h.handlePaymentSucceeded(ctx, event)
+		}
+		if event.Status == "DECLINED" || event.Status == "ERROR" || event.Status == "VOIDED" {
+			return h.handlePaymentFailed(ctx, event)
+		}
 	case "payment.failed":
-		return h.handlePaymentFailed(event)
+		return h.handlePaymentFailed(ctx, event)
 	case "subscription.canceled":
-		return h.handleSubscriptionCanceled(event)
+		return h.handleSubscriptionCanceled(ctx, event)
 	default:
-		// ctx es any, pero logger espera context.Context, usamos nil
-		logger.Default().Info(nil, "unhandled_webhook_event", "event_type", event.EventType)
+		logger.Default().Info(ctx, "unhandled_webhook_event", "event_type", event.EventType)
 	}
 	return nil
 }
 
-func (h *WebhookHandler) handlePaymentSucceeded(event *payment.WebhookEvent) error {
-	// Extraer tenant_id del metadata
-	tenantIDStr, ok := event.Metadata["tenant_id"].(string)
-	if !ok {
-		logger.Default().Error(nil, "missing_tenant_id_in_webhook")
-		return nil
-	}
-	
-	tenantID, err := primitive.ObjectIDFromHex(tenantIDStr)
+func (h *WebhookHandler) handlePaymentSucceeded(ctx context.Context, event *payment.WebhookEvent) error {
+	// Buscar el payment pendiente por external_transaction_id (payment link ID)
+	tenantObj, err := h.findTenantBySubscriptionID(ctx, event.SubscriptionID)
 	if err != nil {
+		logger.Default().Error(ctx, "tenant_not_found_for_webhook", "subscription_id", event.SubscriptionID)
 		return err
 	}
-	
-	// Crear registro de pago
+
+	// Actualizar el pago pendiente
 	now := time.Now()
-	paymentDTO := &payments.CreatePaymentDTO{
-		TenantID:              tenantIDStr,
-		Amount:                event.Amount,
-		Currency:              event.Currency,
-		PaymentMethod:         string(event.Provider),
-		Status:                payments.PaymentCompleted,
-		ExternalTransactionID: event.TransactionID,
-		Concept:               "Pago de suscripción",
-		ProcessedAt:           &now,
-		Metadata:              event.Metadata,
-	}
-	
-	if _, err := h.paymentService.Create(nil, paymentDTO); err != nil {
-		logger.Default().Error(nil, "failed_to_create_payment", "error", err)
-		return err
-	}
-	
+
 	// Actualizar estado del tenant
-	tenantObj, err := h.tenantRepo.FindByID(nil, tenantID.Hex())
-	if err != nil {
-		return err
-	}
-	
 	tenantObj.Subscription.BillingStatus = "active"
 	tenantObj.Status = tenant.Active
-	
-	if err := h.tenantRepo.Update(nil, tenantObj); err != nil {
-		logger.Default().Error(nil, "failed_to_update_tenant", "error", err)
+	tenantObj.UpdatedAt = now
+
+	// Actualizar límites según el plan
+	if !tenantObj.Subscription.PlanID.IsZero() {
+		plan, err := h.planRepo.FindByID(ctx, tenantObj.Subscription.PlanID.Hex())
+		if err == nil {
+			tenantObj.Usage.UsersLimit = plan.MaxUsers
+			tenantObj.Usage.StorageLimitMB = plan.StorageLimitGB * 1024
+		}
+	}
+
+	if err := h.tenantRepo.Update(ctx, tenantObj); err != nil {
+		logger.Default().Error(ctx, "failed_to_update_tenant", "error", err)
 		return err
 	}
-	
-	logger.Default().Info(nil, "payment_processed", "tenant_id", tenantIDStr, "amount", event.Amount)
+
+	logger.Default().Info(ctx, "payment_processed", "tenant_id", tenantObj.ID.Hex(), "amount", event.Amount)
 	return nil
 }
 
-func (h *WebhookHandler) handlePaymentFailed(event *payment.WebhookEvent) error {
-	tenantIDStr, ok := event.Metadata["tenant_id"].(string)
-	if !ok {
+func (h *WebhookHandler) handlePaymentFailed(ctx context.Context, event *payment.WebhookEvent) error {
+	tenantObj, err := h.findTenantBySubscriptionID(ctx, event.SubscriptionID)
+	if err != nil {
+		logger.Default().Error(ctx, "tenant_not_found_for_webhook", "subscription_id", event.SubscriptionID)
 		return nil
 	}
-	
+
 	// Registrar pago fallido
 	paymentDTO := &payments.CreatePaymentDTO{
-		TenantID:              tenantIDStr,
+		TenantID:              tenantObj.ID.Hex(),
 		Amount:                event.Amount,
 		Currency:              event.Currency,
 		PaymentMethod:         string(event.Provider),
@@ -178,41 +172,36 @@ func (h *WebhookHandler) handlePaymentFailed(event *payment.WebhookEvent) error 
 		FailureReason:         event.Status,
 		Metadata:              event.Metadata,
 	}
-	
-	if _, err := h.paymentService.Create(nil, paymentDTO); err != nil {
-		logger.Default().Error(nil, "failed_to_create_payment", "error", err)
+
+	if _, err := h.paymentService.Create(ctx, paymentDTO); err != nil {
+		logger.Default().Error(ctx, "failed_to_create_payment", "error", err)
 		return err
 	}
-	
-	logger.Default().Warn(nil, "payment_failed", "tenant_id", tenantIDStr, "reason", event.Status)
+
+	logger.Default().Warn(ctx, "payment_failed", "tenant_id", tenantObj.ID.Hex(), "reason", event.Status)
 	return nil
 }
 
-func (h *WebhookHandler) handleSubscriptionCanceled(event *payment.WebhookEvent) error {
-	tenantIDStr, ok := event.Metadata["tenant_id"].(string)
-	if !ok {
-		return nil
-	}
-	
-	tenantID, err := primitive.ObjectIDFromHex(tenantIDStr)
+func (h *WebhookHandler) handleSubscriptionCanceled(ctx context.Context, event *payment.WebhookEvent) error {
+	tenantObj, err := h.findTenantBySubscriptionID(ctx, event.SubscriptionID)
 	if err != nil {
 		return err
 	}
-	
-	// Actualizar estado del tenant
-	tenantObj, err := h.tenantRepo.FindByID(nil, tenantID.Hex())
-	if err != nil {
-		return err
-	}
-	
+
 	tenantObj.Subscription.BillingStatus = "canceled"
 	tenantObj.Status = tenant.Suspended
-	
-	if err := h.tenantRepo.Update(nil, tenantObj); err != nil {
-		logger.Default().Error(nil, "failed_to_update_tenant", "error", err)
+	tenantObj.UpdatedAt = time.Now()
+
+	if err := h.tenantRepo.Update(ctx, tenantObj); err != nil {
+		logger.Default().Error(ctx, "failed_to_update_tenant", "error", err)
 		return err
 	}
-	
-	logger.Default().Info(nil, "subscription_canceled", "tenant_id", tenantIDStr)
+
+	logger.Default().Info(ctx, "subscription_canceled", "tenant_id", tenantObj.ID.Hex())
 	return nil
+}
+
+// findTenantBySubscriptionID busca el tenant que tiene el external_subscription_id del payment link
+func (h *WebhookHandler) findTenantBySubscriptionID(ctx context.Context, subscriptionID string) (*tenant.Tenant, error) {
+	return h.tenantRepo.FindByExternalSubscriptionID(ctx, subscriptionID)
 }

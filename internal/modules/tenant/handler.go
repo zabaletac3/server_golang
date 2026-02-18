@@ -84,6 +84,29 @@ func (h *Handler) Update(c *gin.Context) (any, error) {
 	return h.service.Update(c.Request.Context(), id, &dto)
 }
 
+// Subscribe godoc
+// @Summary      Suscribir tenant a un plan
+// @Description  Crea un payment link para que el tenant pague y se suscriba al plan
+// @Tags         tenant
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string        true  "Tenant ID"
+// @Param        body  body      SubscribeDTO  true  "Datos de suscripción"
+// @Success      200   {object}  SubscribeResponse
+// @Failure      400   {object}  validation.ValidationError
+// @Failure      404   {object}  map[string]string
+// @Router       /api/tenants/{id}/subscribe [post]
+func (h *Handler) Subscribe(c *gin.Context) (any, error) {
+	id := c.Param("id")
+
+	var dto SubscribeDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		return nil, validation.Validate(err)
+	}
+
+	return h.service.Subscribe(c.Request.Context(), id, &dto)
+}
+
 // Delete godoc
 // @Summary      Eliminar tenant
 // @Description  Elimina un tenant por su ID (soft delete)

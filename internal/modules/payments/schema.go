@@ -9,8 +9,9 @@ import (
 type Payment struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	
-	// Relación
+	// Relaciones
 	TenantID primitive.ObjectID `bson:"tenant_id" json:"tenant_id"`
+	PlanID   primitive.ObjectID `bson:"plan_id,omitempty" json:"plan_id,omitempty"`
 	
 	// Monto (en centavos para evitar problemas de redondeo)
 	Amount   int64  `bson:"amount" json:"amount"`

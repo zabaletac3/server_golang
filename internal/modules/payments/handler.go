@@ -78,29 +78,3 @@ func (h *PaymentHandler) FindByTenantID(c *gin.Context) (any, error) {
 	return h.service.FindByTenantID(c.Request.Context(), tenantID, limit)
 }
 
-// ProcessWebhook godoc
-// @Summary      Procesar webhook de pago
-// @Description  Endpoint para recibir webhooks de proveedores de pago
-// @Tags         payments
-// @Accept       json
-// @Produce      json
-// @Param        provider path string true "Provider name" Enums(wompi, stripe)
-// @Param        body body map[string]interface{} true "Webhook payload"
-// @Success      200 {object} map[string]string
-// @Failure      400 {object} map[string]string
-// @Router       /api/webhooks/{provider} [post]
-func (h *PaymentHandler) ProcessWebhook(c *gin.Context) (any, error) {
-	provider := c.Param("provider")
-	
-	var payload map[string]interface{}
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		return nil, validation.Validate(err)
-	}
-
-	// TODO: Implementar lógica de webhook según el provider
-	// Por ahora solo retornamos OK
-	return gin.H{
-		"status":   "received",
-		"provider": provider,
-	}, nil
-}

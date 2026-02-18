@@ -36,7 +36,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/LoginDTO"
+                            "$ref": "#/definitions/internal_modules_auth.LoginDTO"
                         }
                     }
                 ],
@@ -44,13 +44,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TokenResponse"
+                            "$ref": "#/definitions/internal_modules_auth.TokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -87,7 +87,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/UserInfo"
+                            "$ref": "#/definitions/internal_modules_auth.UserInfo"
                         }
                     },
                     "401": {
@@ -122,7 +122,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/RefreshDTO"
+                            "$ref": "#/definitions/internal_modules_auth.RefreshDTO"
                         }
                     }
                 ],
@@ -130,13 +130,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TokenResponse"
+                            "$ref": "#/definitions/internal_modules_auth.TokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -171,7 +171,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/RegisterDTO"
+                            "$ref": "#/definitions/internal_modules_auth.RegisterDTO"
                         }
                     }
                 ],
@@ -179,13 +179,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TokenResponse"
+                            "$ref": "#/definitions/internal_modules_auth.TokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "409": {
@@ -795,7 +795,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreatePaymentDTO"
+                            "$ref": "#/definitions/internal_modules_payments.CreatePaymentDTO"
                         }
                     }
                 ],
@@ -803,13 +803,13 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/PaymentResponse"
+                            "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "500": {
@@ -847,7 +847,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PaymentResponse"
+                            "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
                         }
                     },
                     "404": {
@@ -909,7 +909,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PaginatedPermissionsResponse"
+                            "$ref": "#/definitions/internal_modules_permissions.PaginatedPermissionsResponse"
                         }
                     },
                     "401": {
@@ -947,7 +947,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreatePermissionDTO"
+                            "$ref": "#/definitions/internal_modules_permissions.CreatePermissionDTO"
                         }
                     }
                 ],
@@ -955,13 +955,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PermissionResponse"
+                            "$ref": "#/definitions/internal_modules_permissions.PermissionResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -1016,7 +1016,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PermissionResponse"
+                            "$ref": "#/definitions/internal_modules_permissions.PermissionResponse"
                         }
                     },
                     "401": {
@@ -1126,7 +1126,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdatePermissionDTO"
+                            "$ref": "#/definitions/internal_modules_permissions.UpdatePermissionDTO"
                         }
                     }
                 ],
@@ -1134,13 +1134,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PermissionResponse"
+                            "$ref": "#/definitions/internal_modules_permissions.PermissionResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -1180,7 +1180,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/PlanResponse"
+                                "$ref": "#/definitions/internal_modules_plans.PlanResponse"
                             }
                         }
                     },
@@ -1214,7 +1214,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreatePlanDTO"
+                            "$ref": "#/definitions/internal_modules_plans.CreatePlanDTO"
                         }
                     }
                 ],
@@ -1222,13 +1222,13 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/PlanResponse"
+                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "500": {
@@ -1259,7 +1259,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/PlanResponse"
+                                "$ref": "#/definitions/internal_modules_plans.PlanResponse"
                             }
                         }
                     },
@@ -1298,7 +1298,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PlanResponse"
+                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
                         }
                     },
                     "404": {
@@ -1386,7 +1386,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdatePlanDTO"
+                            "$ref": "#/definitions/internal_modules_plans.UpdatePlanDTO"
                         }
                     }
                 ],
@@ -1394,13 +1394,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PlanResponse"
+                            "$ref": "#/definitions/internal_modules_plans.PlanResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "404": {
@@ -1462,7 +1462,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PaginatedResourcesResponse"
+                            "$ref": "#/definitions/internal_modules_resources.PaginatedResourcesResponse"
                         }
                     },
                     "401": {
@@ -1500,7 +1500,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateResourceDTO"
+                            "$ref": "#/definitions/internal_modules_resources.CreateResourceDTO"
                         }
                     }
                 ],
@@ -1508,13 +1508,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ResourceResponse"
+                            "$ref": "#/definitions/internal_modules_resources.ResourceResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -1569,7 +1569,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ResourceResponse"
+                            "$ref": "#/definitions/internal_modules_resources.ResourceResponse"
                         }
                     },
                     "401": {
@@ -1679,7 +1679,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateResourceDTO"
+                            "$ref": "#/definitions/internal_modules_resources.UpdateResourceDTO"
                         }
                     }
                 ],
@@ -1687,13 +1687,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ResourceResponse"
+                            "$ref": "#/definitions/internal_modules_resources.ResourceResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -1755,7 +1755,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PaginatedRolesResponse"
+                            "$ref": "#/definitions/internal_modules_roles.PaginatedRolesResponse"
                         }
                     },
                     "401": {
@@ -1793,7 +1793,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateRoleDTO"
+                            "$ref": "#/definitions/internal_modules_roles.CreateRoleDTO"
                         }
                     }
                 ],
@@ -1801,13 +1801,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/RoleResponse"
+                            "$ref": "#/definitions/internal_modules_roles.RoleResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -1862,7 +1862,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/RoleResponse"
+                            "$ref": "#/definitions/internal_modules_roles.RoleResponse"
                         }
                     },
                     "401": {
@@ -1972,7 +1972,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateRoleDTO"
+                            "$ref": "#/definitions/internal_modules_roles.UpdateRoleDTO"
                         }
                     }
                 ],
@@ -1980,13 +1980,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/RoleResponse"
+                            "$ref": "#/definitions/internal_modules_roles.RoleResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -2136,7 +2136,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/TenantResponse"
+                                "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
                             }
                         }
                     }
@@ -2161,7 +2161,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateTenantDTO"
+                            "$ref": "#/definitions/internal_modules_tenant.CreateTenantDTO"
                         }
                     }
                 ],
@@ -2169,13 +2169,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TenantResponse"
+                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "409": {
@@ -2216,7 +2216,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TenantResponse"
+                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
                         }
                     },
                     "404": {
@@ -2298,7 +2298,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateTenantDTO"
+                            "$ref": "#/definitions/internal_modules_tenant.UpdateTenantDTO"
                         }
                     }
                 ],
@@ -2306,13 +2306,69 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TenantResponse"
+                            "$ref": "#/definitions/internal_modules_tenant.TenantResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tenants/{id}/subscribe": {
+            "post": {
+                "description": "Crea un payment link para que el tenant pague y se suscriba al plan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "Suscribir tenant a un plan",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de suscripción",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.SubscribeDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.SubscribeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "404": {
@@ -2359,7 +2415,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/PaymentResponse"
+                                "$ref": "#/definitions/internal_modules_payments.PaymentResponse"
                             }
                         }
                     },
@@ -2422,7 +2478,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PaginatedUsersResponse"
+                            "$ref": "#/definitions/internal_modules_users.PaginatedUsersResponse"
                         }
                     },
                     "401": {
@@ -2460,7 +2516,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateUserDTO"
+                            "$ref": "#/definitions/internal_modules_users.CreateUserDTO"
                         }
                     }
                 ],
@@ -2468,13 +2524,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/UserResponse"
+                            "$ref": "#/definitions/internal_modules_users.UserResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -2529,7 +2585,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/UserResponse"
+                            "$ref": "#/definitions/internal_modules_users.UserResponse"
                         }
                     },
                     "401": {
@@ -2639,7 +2695,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateUserDTO"
+                            "$ref": "#/definitions/internal_modules_users.UpdateUserDTO"
                         }
                     }
                 ],
@@ -2647,13 +2703,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/UserResponse"
+                            "$ref": "#/definitions/internal_modules_users.UserResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ValidationError"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
                         }
                     },
                     "401": {
@@ -3368,7 +3424,7 @@
         }
     },
     "definitions": {
-        "PaginationInfo": {
+        "github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo": {
             "type": "object",
             "properties": {
                 "limit": {
@@ -3393,7 +3449,7 @@
                 }
             }
         },
-        "FieldError": {
+        "github_com_eren_dev_go_server_internal_shared_validation.FieldError": {
             "type": "object",
             "properties": {
                 "field": {
@@ -3408,19 +3464,19 @@
                 }
             }
         },
-        "ValidationError": {
+        "github_com_eren_dev_go_server_internal_shared_validation.ValidationError": {
             "type": "object",
             "properties": {
                 "errors": {
                     "description": "Lista de errores por campo",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/FieldError"
+                        "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.FieldError"
                     }
                 }
             }
         },
-        "LoginDTO": {
+        "internal_modules_auth.LoginDTO": {
             "type": "object",
             "required": [
                 "email",
@@ -3439,7 +3495,7 @@
                 }
             }
         },
-        "RefreshDTO": {
+        "internal_modules_auth.RefreshDTO": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -3452,7 +3508,7 @@
                 }
             }
         },
-        "RegisterDTO": {
+        "internal_modules_auth.RegisterDTO": {
             "type": "object",
             "required": [
                 "email",
@@ -3479,7 +3535,7 @@
                 }
             }
         },
-        "TokenResponse": {
+        "internal_modules_auth.TokenResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -3499,7 +3555,7 @@
                 }
             }
         },
-        "UserInfo": {
+        "internal_modules_auth.UserInfo": {
             "type": "object",
             "properties": {
                 "email": {
@@ -3673,7 +3729,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/PaginationInfo"
+                    "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
                 }
             }
         },
@@ -3687,7 +3743,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/PaginationInfo"
+                    "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
                 }
             }
         },
@@ -3799,7 +3855,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/PaginationInfo"
+                    "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
                 }
             }
         },
@@ -3947,7 +4003,7 @@
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/PaginationInfo"
+                    "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
                 }
             }
         },
@@ -4089,7 +4145,7 @@
                 }
             }
         },
-        "CreatePaymentDTO": {
+        "internal_modules_payments.CreatePaymentDTO": {
             "type": "object",
             "required": [
                 "amount",
@@ -4111,7 +4167,7 @@
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "COP"
                 },
                 "external_transaction_id": {
                     "type": "string",
@@ -4137,6 +4193,10 @@
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
+                "plan_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
                 "processed_at": {
                     "type": "string",
                     "example": "2024-01-15T10:30:00Z"
@@ -4144,7 +4204,7 @@
                 "status": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/PaymentStatus"
+                            "$ref": "#/definitions/internal_modules_payments.PaymentStatus"
                         }
                     ],
                     "example": "completed"
@@ -4155,7 +4215,7 @@
                 }
             }
         },
-        "PaymentResponse": {
+        "internal_modules_payments.PaymentResponse": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -4172,7 +4232,7 @@
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "COP"
                 },
                 "external_transaction_id": {
                     "type": "string",
@@ -4202,6 +4262,10 @@
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
+                "plan_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
                 "processed_at": {
                     "type": "string",
                     "example": "2024-01-15T10:30:00Z"
@@ -4209,7 +4273,7 @@
                 "status": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/PaymentStatus"
+                            "$ref": "#/definitions/internal_modules_payments.PaymentStatus"
                         }
                     ],
                     "example": "completed"
@@ -4224,7 +4288,7 @@
                 }
             }
         },
-        "PaymentStatus": {
+        "internal_modules_payments.PaymentStatus": {
             "type": "string",
             "enum": [
                 "pending",
@@ -4239,7 +4303,7 @@
                 "PaymentRefunded"
             ]
         },
-        "Action": {
+        "internal_modules_permissions.Action": {
             "type": "string",
             "enum": [
                 "get",
@@ -4256,7 +4320,7 @@
                 "ActionDelete"
             ]
         },
-        "CreatePermissionDTO": {
+        "internal_modules_permissions.CreatePermissionDTO": {
             "type": "object",
             "required": [
                 "action",
@@ -4281,34 +4345,34 @@
                 }
             }
         },
-        "PaginatedPermissionsResponse": {
+        "internal_modules_permissions.PaginatedPermissionsResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "description": "Lista de permisos",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/PermissionResponse"
+                        "$ref": "#/definitions/internal_modules_permissions.PermissionResponse"
                     }
                 },
                 "pagination": {
                     "description": "Información de paginación",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/PaginationInfo"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
                         }
                     ]
                 }
             }
         },
-        "PermissionResponse": {
+        "internal_modules_permissions.PermissionResponse": {
             "type": "object",
             "properties": {
                 "action": {
                     "description": "Acción permitida",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/Action"
+                            "$ref": "#/definitions/internal_modules_permissions.Action"
                         }
                     ],
                     "example": "get"
@@ -4326,7 +4390,7 @@
                     "description": "Recurso asociado (poblado)",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/ResourceRef"
+                            "$ref": "#/definitions/internal_modules_permissions.ResourceRef"
                         }
                     ]
                 },
@@ -4341,7 +4405,7 @@
                 }
             }
         },
-        "ResourceRef": {
+        "internal_modules_permissions.ResourceRef": {
             "type": "object",
             "properties": {
                 "id": {
@@ -4356,7 +4420,7 @@
                 }
             }
         },
-        "UpdatePermissionDTO": {
+        "internal_modules_permissions.UpdatePermissionDTO": {
             "type": "object",
             "properties": {
                 "action": {
@@ -4366,7 +4430,7 @@
                 }
             }
         },
-        "CreatePlanDTO": {
+        "internal_modules_plans.CreatePlanDTO": {
             "type": "object",
             "required": [
                 "annual_price",
@@ -4432,7 +4496,7 @@
                 }
             }
         },
-        "PlanResponse": {
+        "internal_modules_plans.PlanResponse": {
             "type": "object",
             "properties": {
                 "annual_price": {
@@ -4495,7 +4559,7 @@
                 }
             }
         },
-        "UpdatePlanDTO": {
+        "internal_modules_plans.UpdatePlanDTO": {
             "type": "object",
             "properties": {
                 "annual_price": {
@@ -4537,7 +4601,7 @@
                 }
             }
         },
-        "CreateResourceDTO": {
+        "internal_modules_resources.CreateResourceDTO": {
             "type": "object",
             "required": [
                 "name",
@@ -4562,27 +4626,27 @@
                 }
             }
         },
-        "PaginatedResourcesResponse": {
+        "internal_modules_resources.PaginatedResourcesResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "description": "Lista de recursos",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ResourceResponse"
+                        "$ref": "#/definitions/internal_modules_resources.ResourceResponse"
                     }
                 },
                 "pagination": {
                     "description": "Información de paginación",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/PaginationInfo"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
                         }
                     ]
                 }
             }
         },
-        "ResourceResponse": {
+        "internal_modules_resources.ResourceResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -4615,7 +4679,7 @@
                 }
             }
         },
-        "UpdateResourceDTO": {
+        "internal_modules_resources.UpdateResourceDTO": {
             "type": "object",
             "properties": {
                 "description": {
@@ -4630,7 +4694,7 @@
                 }
             }
         },
-        "CreateRoleDTO": {
+        "internal_modules_roles.CreateRoleDTO": {
             "type": "object",
             "required": [
                 "name",
@@ -4675,27 +4739,27 @@
                 }
             }
         },
-        "PaginatedRolesResponse": {
+        "internal_modules_roles.PaginatedRolesResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "description": "Lista de roles",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/RoleResponse"
+                        "$ref": "#/definitions/internal_modules_roles.RoleResponse"
                     }
                 },
                 "pagination": {
                     "description": "Información de paginación",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/PaginationInfo"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
                         }
                     ]
                 }
             }
         },
-        "PermissionRef": {
+        "internal_modules_roles.PermissionRef": {
             "type": "object",
             "properties": {
                 "action": {
@@ -4712,13 +4776,13 @@
                     "description": "Recurso asociado",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/ResourceRef"
+                            "$ref": "#/definitions/internal_modules_roles.ResourceRef"
                         }
                     ]
                 }
             }
         },
-        "ResourceRef": {
+        "internal_modules_roles.ResourceRef": {
             "type": "object",
             "properties": {
                 "description": {
@@ -4738,7 +4802,7 @@
                 }
             }
         },
-        "RoleResponse": {
+        "internal_modules_roles.RoleResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -4764,14 +4828,14 @@
                     "description": "Permisos poblados (recurso + acción)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/PermissionRef"
+                        "$ref": "#/definitions/internal_modules_roles.PermissionRef"
                     }
                 },
                 "resources": {
                     "description": "Recursos accesibles poblados",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ResourceRef"
+                        "$ref": "#/definitions/internal_modules_roles.ResourceRef"
                     }
                 },
                 "tenant_id": {
@@ -4785,7 +4849,7 @@
                 }
             }
         },
-        "UpdateRoleDTO": {
+        "internal_modules_roles.UpdateRoleDTO": {
             "type": "object",
             "properties": {
                 "description": {
@@ -4814,7 +4878,7 @@
                 }
             }
         },
-        "CreateTenantDTO": {
+        "internal_modules_tenant.CreateTenantDTO": {
             "type": "object",
             "required": [
                 "address",
@@ -4894,7 +4958,41 @@
                 }
             }
         },
-        "TenantResponse": {
+        "internal_modules_tenant.SubscribeDTO": {
+            "type": "object",
+            "required": [
+                "billing_period",
+                "plan_id"
+            ],
+            "properties": {
+                "billing_period": {
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "annual"
+                    ],
+                    "example": "monthly"
+                },
+                "plan_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "internal_modules_tenant.SubscribeResponse": {
+            "type": "object",
+            "properties": {
+                "payment_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "payment_link_url": {
+                    "type": "string",
+                    "example": "https://checkout.wompi.co/l/abc123"
+                }
+            }
+        },
+        "internal_modules_tenant.TenantResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -4960,13 +5058,13 @@
                 "status": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/TenantStatus"
+                            "$ref": "#/definitions/internal_modules_tenant.TenantStatus"
                         }
                     ],
                     "example": "active"
                 },
                 "subscription": {
-                    "$ref": "#/definitions/TenantSubscriptionResponse"
+                    "$ref": "#/definitions/internal_modules_tenant.TenantSubscriptionResponse"
                 },
                 "timezone": {
                     "type": "string",
@@ -4977,11 +5075,11 @@
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "usage": {
-                    "$ref": "#/definitions/TenantUsageResponse"
+                    "$ref": "#/definitions/internal_modules_tenant.TenantUsageResponse"
                 }
             }
         },
-        "TenantStatus": {
+        "internal_modules_tenant.TenantStatus": {
             "type": "string",
             "enum": [
                 "active",
@@ -4996,7 +5094,7 @@
                 "Suspended"
             ]
         },
-        "TenantSubscriptionResponse": {
+        "internal_modules_tenant.TenantSubscriptionResponse": {
             "type": "object",
             "properties": {
                 "billing_status": {
@@ -5022,7 +5120,7 @@
                 }
             }
         },
-        "TenantUsageResponse": {
+        "internal_modules_tenant.TenantUsageResponse": {
             "type": "object",
             "properties": {
                 "last_reset_date": {
@@ -5042,7 +5140,7 @@
                 }
             }
         },
-        "UpdateTenantDTO": {
+        "internal_modules_tenant.UpdateTenantDTO": {
             "type": "object",
             "properties": {
                 "address": {
@@ -5095,7 +5193,7 @@
                 }
             }
         },
-        "CreateUserDTO": {
+        "internal_modules_users.CreateUserDTO": {
             "type": "object",
             "required": [
                 "email",
@@ -5122,27 +5220,27 @@
                 }
             }
         },
-        "PaginatedUsersResponse": {
+        "internal_modules_users.PaginatedUsersResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "description": "Lista de usuarios",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/UserResponse"
+                        "$ref": "#/definitions/internal_modules_users.UserResponse"
                     }
                 },
                 "pagination": {
                     "description": "Información de paginación",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/PaginationInfo"
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
                         }
                     ]
                 }
             }
         },
-        "UpdateUserDTO": {
+        "internal_modules_users.UpdateUserDTO": {
             "type": "object",
             "properties": {
                 "email": {
@@ -5157,7 +5255,7 @@
                 }
             }
         },
-        "UserResponse": {
+        "internal_modules_users.UserResponse": {
             "type": "object",
             "properties": {
                 "created_at": {

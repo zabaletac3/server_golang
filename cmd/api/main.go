@@ -104,6 +104,7 @@ func main() {
 			cfg.WompiPublicKey,
 			cfg.WompiPrivateKey,
 			cfg.WompiWebhookSecret,
+			cfg.WompiRedirectURL,
 		)
 		if err := paymentManager.RegisterProvider(wompiProvider); err != nil {
 			logger.Default().Error(context.Background(), "failed_to_register_wompi", "error", err)

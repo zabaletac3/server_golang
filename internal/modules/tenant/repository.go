@@ -14,6 +14,7 @@ import (
 type TenantRepository interface {
 	Create(ctx context.Context, tenant *Tenant) error
 	FindByID(ctx context.Context, id string) (*Tenant, error)
+	FindByExternalSubscriptionID(ctx context.Context, subscriptionID string) (*Tenant, error)
 	FindAll(ctx context.Context) ([]Tenant, error)
 	Update(ctx context.Context, tenant *Tenant) error
 	Delete(ctx context.Context, id string) error
@@ -42,6 +43,18 @@ func (r *tenantRepository) FindByID(ctx context.Context, id string) (*Tenant, er
 
 	var tenant Tenant
 	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&tenant)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, ErrTenantNotFound
+		}
+		return nil, err
+	}
+	return &tenant, nil
+}
+
+func (r *tenantRepository) FindByExternalSubscriptionID(ctx context.Context, subscriptionID string) (*Tenant, error) {
+	var tenant Tenant
+	err := r.collection.FindOne(ctx, bson.M{"subscription.external_subscription_id": subscriptionID}).Decode(&tenant)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, ErrTenantNotFound

@@ -64,6 +64,7 @@ type Config struct {
 	WompiPublicKey         string
 	WompiPrivateKey        string
 	WompiWebhookSecret     string
+	WompiRedirectURL       string
 	StripeAPIKey           string
 	StripeWebhookSecret    string
 
@@ -128,6 +129,7 @@ func Load() *Config {
 		WompiPublicKey:         getEnv("WOMPI_PUBLIC_KEY", ""),
 		WompiPrivateKey:        getEnv("WOMPI_PRIVATE_KEY", ""),
 		WompiWebhookSecret:     getEnv("WOMPI_WEBHOOK_SECRET", ""),
+		WompiRedirectURL:       getEnv("WOMPI_REDIRECT_URL", ""),
 		StripeAPIKey:           getEnv("STRIPE_API_KEY", ""),
 		StripeWebhookSecret:    getEnv("STRIPE_WEBHOOK_SECRET", ""),
 

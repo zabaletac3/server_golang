@@ -2333,6 +2333,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/tenants/{id}/subscribe": {
+            "post": {
+                "description": "Crea un payment link para que el tenant pague y se suscriba al plan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "Suscribir tenant a un plan",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de suscripción",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.SubscribeDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_tenant.SubscribeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/tenants/{tenant_id}/payments": {
             "get": {
                 "description": "Obtiene el historial de pagos de un tenant",
@@ -4117,7 +4173,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "COP"
                 },
                 "external_transaction_id": {
                     "type": "string",
@@ -4142,6 +4198,10 @@ const docTemplate = `{
                 "period_start": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
+                },
+                "plan_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
                 },
                 "processed_at": {
                     "type": "string",
@@ -4178,7 +4238,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "COP"
                 },
                 "external_transaction_id": {
                     "type": "string",
@@ -4207,6 +4267,10 @@ const docTemplate = `{
                 "period_start": {
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
+                },
+                "plan_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
                 },
                 "processed_at": {
                     "type": "string",
@@ -4897,6 +4961,40 @@ const docTemplate = `{
                 "timezone": {
                     "type": "string",
                     "example": "America/Bogota"
+                }
+            }
+        },
+        "internal_modules_tenant.SubscribeDTO": {
+            "type": "object",
+            "required": [
+                "billing_period",
+                "plan_id"
+            ],
+            "properties": {
+                "billing_period": {
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "annual"
+                    ],
+                    "example": "monthly"
+                },
+                "plan_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                }
+            }
+        },
+        "internal_modules_tenant.SubscribeResponse": {
+            "type": "object",
+            "properties": {
+                "payment_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "payment_link_url": {
+                    "type": "string",
+                    "example": "https://checkout.wompi.co/l/abc123"
                 }
             }
         },

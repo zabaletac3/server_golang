@@ -2,6 +2,7 @@ package payments
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,10 +22,19 @@ func (s *PaymentService) Create(ctx context.Context, dto *CreatePaymentDTO) (*Pa
 		return nil, ErrInvalidTenantID
 	}
 
+	var planID primitive.ObjectID
+	if dto.PlanID != "" {
+		planID, err = primitive.ObjectIDFromHex(dto.PlanID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid plan_id: %w", err)
+		}
+	}
+
 	now := time.Now()
 	payment := &Payment{
 		ID:                    primitive.NewObjectID(),
 		TenantID:              tenantID,
+		PlanID:                planID,
 		Amount:                dto.Amount,
 		Currency:              dto.Currency,
 		PaymentMethod:         dto.PaymentMethod,

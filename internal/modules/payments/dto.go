@@ -5,8 +5,9 @@ import "time"
 // CreatePaymentDTO request para crear pago
 type CreatePaymentDTO struct {
 	TenantID              string                 `json:"tenant_id" binding:"required" example:"507f1f77bcf86cd799439011"`
+	PlanID                string                 `json:"plan_id,omitempty" example:"507f1f77bcf86cd799439011"`
 	Amount                int64                  `json:"amount" binding:"required,min=1" example:"4900"`
-	Currency              string                 `json:"currency" binding:"required" example:"USD"`
+	Currency              string                 `json:"currency" binding:"required" example:"COP"`
 	PaymentMethod         string                 `json:"payment_method" binding:"required" example:"wompi"`
 	Status                PaymentStatus          `json:"status" binding:"required" example:"completed"`
 	ExternalTransactionID string                 `json:"external_transaction_id,omitempty" example:"wompi_tx_123456"`
@@ -22,8 +23,9 @@ type CreatePaymentDTO struct {
 type PaymentResponse struct {
 	ID                    string                 `json:"id" example:"507f1f77bcf86cd799439011"`
 	TenantID              string                 `json:"tenant_id" example:"507f1f77bcf86cd799439011"`
+	PlanID                string                 `json:"plan_id,omitempty" example:"507f1f77bcf86cd799439011"`
 	Amount                int64                  `json:"amount" example:"4900"`
-	Currency              string                 `json:"currency" example:"USD"`
+	Currency              string                 `json:"currency" example:"COP"`
 	PaymentMethod         string                 `json:"payment_method" example:"wompi"`
 	Status                PaymentStatus          `json:"status" example:"completed"`
 	ExternalTransactionID string                 `json:"external_transaction_id,omitempty" example:"wompi_tx_123456"`
@@ -39,7 +41,7 @@ type PaymentResponse struct {
 
 // ToResponse convierte un Payment a PaymentResponse
 func ToResponse(p *Payment) *PaymentResponse {
-	return &PaymentResponse{
+	resp := &PaymentResponse{
 		ID:                    p.ID.Hex(),
 		TenantID:              p.TenantID.Hex(),
 		Amount:                p.Amount,
@@ -56,6 +58,12 @@ func ToResponse(p *Payment) *PaymentResponse {
 		CreatedAt:             p.CreatedAt,
 		UpdatedAt:             p.UpdatedAt,
 	}
+
+	if !p.PlanID.IsZero() {
+		resp.PlanID = p.PlanID.Hex()
+	}
+
+	return resp
 }
 
 // ToResponseList convierte una lista de Payment a lista de PaymentResponse

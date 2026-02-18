@@ -511,7 +511,7 @@ definitions:
         example: Pago mensual - Plan Pro
         type: string
       currency:
-        example: USD
+        example: COP
         type: string
       external_transaction_id:
         example: wompi_tx_123456
@@ -530,6 +530,9 @@ definitions:
         type: string
       period_start:
         example: "2024-01-01T00:00:00Z"
+        type: string
+      plan_id:
+        example: 507f1f77bcf86cd799439011
         type: string
       processed_at:
         example: "2024-01-15T10:30:00Z"
@@ -561,7 +564,7 @@ definitions:
         example: "2024-01-01T00:00:00Z"
         type: string
       currency:
-        example: USD
+        example: COP
         type: string
       external_transaction_id:
         example: wompi_tx_123456
@@ -583,6 +586,9 @@ definitions:
         type: string
       period_start:
         example: "2024-01-01T00:00:00Z"
+        type: string
+      plan_id:
+        example: 507f1f77bcf86cd799439011
         type: string
       processed_at:
         example: "2024-01-15T10:30:00Z"
@@ -1087,6 +1093,30 @@ definitions:
     - owner_id
     - phone
     - timezone
+    type: object
+  internal_modules_tenant.SubscribeDTO:
+    properties:
+      billing_period:
+        enum:
+        - monthly
+        - annual
+        example: monthly
+        type: string
+      plan_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+    required:
+    - billing_period
+    - plan_id
+    type: object
+  internal_modules_tenant.SubscribeResponse:
+    properties:
+      payment_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      payment_link_url:
+        example: https://checkout.wompi.co/l/abc123
+        type: string
     type: object
   internal_modules_tenant.TenantResponse:
     properties:
@@ -2815,6 +2845,44 @@ paths:
               type: string
             type: object
       summary: Actualizar tenant
+      tags:
+      - tenant
+  /api/tenants/{id}/subscribe:
+    post:
+      consumes:
+      - application/json
+      description: Crea un payment link para que el tenant pague y se suscriba al
+        plan
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos de suscripción
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_tenant.SubscribeDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_tenant.SubscribeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.ValidationError'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Suscribir tenant a un plan
       tags:
       - tenant
   /api/tenants/{tenant_id}/payments:
