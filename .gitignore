@@ -51,6 +51,7 @@ acme.json
 bin/
 dist/
 build/
+secrets/
 
 # Database files
 *.db
