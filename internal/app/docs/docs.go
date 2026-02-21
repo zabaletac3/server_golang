@@ -22,6 +22,580 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a paginated list of appointments with optional filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "List appointments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Filter by appointment type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by veterinarian ID",
+                        "name": "veterinarian_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by patient ID",
+                        "name": "patient_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by owner ID",
+                        "name": "owner_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter from date (RFC3339)",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter to date (RFC3339)",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by priority",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Populate related data",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.PaginatedAppointmentsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new appointment in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "Create appointment",
+                "parameters": [
+                    {
+                        "description": "Appointment data",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.CreateAppointmentDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/appointments/availability": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check if a veterinarian is available at a specific time",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "Check veterinarian availability",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Veterinarian ID",
+                        "name": "veterinarian_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Scheduled time (RFC3339)",
+                        "name": "scheduled_at",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Duration in minutes",
+                        "name": "duration",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exclude appointment ID (for updates)",
+                        "name": "exclude_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AvailabilityResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/appointments/calendar": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get appointments organized by date for calendar display",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "Get calendar view",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (RFC3339)",
+                        "name": "date_from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (RFC3339)",
+                        "name": "date_to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by veterinarian ID",
+                        "name": "veterinarian_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_modules_appointments.CalendarViewResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/appointments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get appointment details by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "Get appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Populate related data",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update appointment details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "Update appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated appointment data",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.UpdateAppointmentDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete an appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "Delete appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/appointments/{id}/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the status change history for an appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "Get status history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_modules_appointments.AppointmentStatusTransitionResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/appointments/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the status of an appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-appointments"
+                ],
+                "summary": "Update appointment status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status data",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.UpdateStatusDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/login": {
             "post": {
                 "description": "Autentica un usuario y retorna tokens",
@@ -2787,6 +3361,161 @@ const docTemplate = `{
                 }
             }
         },
+        "/mobile/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "MobileBearerAuth": []
+                    }
+                ],
+                "description": "Get appointments for the authenticated owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mobile-appointments"
+                ],
+                "summary": "Get owner appointments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.PaginatedAppointmentsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/mobile/appointments/request": {
+            "post": {
+                "security": [
+                    {
+                        "MobileBearerAuth": []
+                    }
+                ],
+                "description": "Request a new appointment from mobile app",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mobile-appointments"
+                ],
+                "summary": "Request appointment",
+                "parameters": [
+                    {
+                        "description": "Appointment request data",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.MobileAppointmentRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/mobile/appointments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "MobileBearerAuth": []
+                    }
+                ],
+                "description": "Get appointment details for the authenticated owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mobile-appointments"
+                ],
+                "summary": "Get owner appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/mobile/auth/login": {
             "post": {
                 "consumes": [
@@ -3479,6 +4208,386 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_validation.FieldError"
                     }
+                }
+            }
+        },
+        "internal_modules_appointments.AppointmentResponse": {
+            "type": "object",
+            "properties": {
+                "cancel_reason": {
+                    "type": "string"
+                },
+                "cancelled_at": {
+                    "type": "string"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2024-01-15T11:05:00Z"
+                },
+                "confirmed_at": {
+                    "type": "string",
+                    "example": "2024-01-14T15:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-10T14:20:00Z"
+                },
+                "duration": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "First visit"
+                },
+                "owner": {},
+                "owner_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439013"
+                },
+                "owner_notes": {
+                    "type": "string",
+                    "example": "Patient anxious"
+                },
+                "patient": {
+                    "description": "Populated data (will be filled when populate=true)"
+                },
+                "patient_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439012"
+                },
+                "priority": {
+                    "type": "string",
+                    "example": "normal"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Annual checkup"
+                },
+                "scheduled_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "started_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:35:00Z"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "scheduled"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "consultation"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-14T15:00:00Z"
+                },
+                "veterinarian": {},
+                "veterinarian_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439014"
+                }
+            }
+        },
+        "internal_modules_appointments.AppointmentStatusTransitionResponse": {
+            "type": "object",
+            "properties": {
+                "appointment_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439012"
+                },
+                "changed_by": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439013"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-14T15:00:00Z"
+                },
+                "from_status": {
+                    "type": "string",
+                    "example": "scheduled"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Confirmed by staff"
+                },
+                "to_status": {
+                    "type": "string",
+                    "example": "confirmed"
+                }
+            }
+        },
+        "internal_modules_appointments.AvailabilityResponse": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "conflict_times": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"10:30-11:00\"",
+                        " \"14:00-14:30\"]"
+                    ]
+                },
+                "suggestions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"11:00\"",
+                        " \"15:00\"",
+                        " \"16:30\"]"
+                    ]
+                }
+            }
+        },
+        "internal_modules_appointments.CalendarViewResponse": {
+            "type": "object",
+            "properties": {
+                "appointments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                    }
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2024-01-15"
+                }
+            }
+        },
+        "internal_modules_appointments.CreateAppointmentDTO": {
+            "type": "object",
+            "required": [
+                "duration",
+                "patient_id",
+                "reason",
+                "scheduled_at",
+                "type",
+                "veterinarian_id"
+            ],
+            "properties": {
+                "duration": {
+                    "type": "integer",
+                    "maximum": 480,
+                    "minimum": 15,
+                    "example": 30
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "First visit for this patient"
+                },
+                "patient_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "emergency"
+                    ],
+                    "example": "normal"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Annual checkup"
+                },
+                "scheduled_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "consultation",
+                        "surgery",
+                        "vaccination",
+                        "emergency",
+                        "checkup",
+                        "grooming"
+                    ],
+                    "example": "consultation"
+                },
+                "veterinarian_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439012"
+                }
+            }
+        },
+        "internal_modules_appointments.MobileAppointmentRequestDTO": {
+            "type": "object",
+            "required": [
+                "patient_id",
+                "reason",
+                "scheduled_at",
+                "type"
+            ],
+            "properties": {
+                "owner_notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Additional information"
+                },
+                "patient_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "emergency"
+                    ],
+                    "example": "normal"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "My pet is not feeling well"
+                },
+                "scheduled_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "consultation",
+                        "surgery",
+                        "vaccination",
+                        "emergency",
+                        "checkup",
+                        "grooming"
+                    ],
+                    "example": "consultation"
+                }
+            }
+        },
+        "internal_modules_appointments.PaginatedAppointmentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                    }
+                },
+                "pagination": {
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "example": 20
+                        },
+                        "page": {
+                            "type": "integer",
+                            "example": 1
+                        },
+                        "total": {
+                            "type": "integer",
+                            "example": 100
+                        },
+                        "total_pages": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                }
+            }
+        },
+        "internal_modules_appointments.UpdateAppointmentDTO": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer",
+                    "maximum": 480,
+                    "minimum": 15,
+                    "example": 45
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Updated notes"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "emergency"
+                    ],
+                    "example": "high"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Updated reason"
+                },
+                "scheduled_at": {
+                    "type": "string",
+                    "example": "2024-01-15T11:00:00Z"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "consultation",
+                        "surgery",
+                        "vaccination",
+                        "emergency",
+                        "checkup",
+                        "grooming"
+                    ],
+                    "example": "surgery"
+                }
+            }
+        },
+        "internal_modules_appointments.UpdateStatusDTO": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "Patient confirmed by phone"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "scheduled",
+                        "confirmed",
+                        "in_progress",
+                        "completed",
+                        "cancelled",
+                        "no_show"
+                    ],
+                    "example": "confirmed"
                 }
             }
         },

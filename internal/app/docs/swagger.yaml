@@ -38,6 +38,291 @@ definitions:
           $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.FieldError'
         type: array
     type: object
+  internal_modules_appointments.AppointmentResponse:
+    properties:
+      cancel_reason:
+        type: string
+      cancelled_at:
+        type: string
+      completed_at:
+        example: "2024-01-15T11:05:00Z"
+        type: string
+      confirmed_at:
+        example: "2024-01-14T15:00:00Z"
+        type: string
+      created_at:
+        example: "2024-01-10T14:20:00Z"
+        type: string
+      duration:
+        example: 30
+        type: integer
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      notes:
+        example: First visit
+        type: string
+      owner: {}
+      owner_id:
+        example: 507f1f77bcf86cd799439013
+        type: string
+      owner_notes:
+        example: Patient anxious
+        type: string
+      patient:
+        description: Populated data (will be filled when populate=true)
+      patient_id:
+        example: 507f1f77bcf86cd799439012
+        type: string
+      priority:
+        example: normal
+        type: string
+      reason:
+        example: Annual checkup
+        type: string
+      scheduled_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      started_at:
+        example: "2024-01-15T10:35:00Z"
+        type: string
+      status:
+        example: scheduled
+        type: string
+      type:
+        example: consultation
+        type: string
+      updated_at:
+        example: "2024-01-14T15:00:00Z"
+        type: string
+      veterinarian: {}
+      veterinarian_id:
+        example: 507f1f77bcf86cd799439014
+        type: string
+    type: object
+  internal_modules_appointments.AppointmentStatusTransitionResponse:
+    properties:
+      appointment_id:
+        example: 507f1f77bcf86cd799439012
+        type: string
+      changed_by:
+        example: 507f1f77bcf86cd799439013
+        type: string
+      created_at:
+        example: "2024-01-14T15:00:00Z"
+        type: string
+      from_status:
+        example: scheduled
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      reason:
+        example: Confirmed by staff
+        type: string
+      to_status:
+        example: confirmed
+        type: string
+    type: object
+  internal_modules_appointments.AvailabilityResponse:
+    properties:
+      available:
+        example: true
+        type: boolean
+      conflict_times:
+        example:
+        - '["10:30-11:00"'
+        - ' "14:00-14:30"]'
+        items:
+          type: string
+        type: array
+      suggestions:
+        example:
+        - '["11:00"'
+        - ' "15:00"'
+        - ' "16:30"]'
+        items:
+          type: string
+        type: array
+    type: object
+  internal_modules_appointments.CalendarViewResponse:
+    properties:
+      appointments:
+        items:
+          $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        type: array
+      date:
+        example: "2024-01-15"
+        type: string
+    type: object
+  internal_modules_appointments.CreateAppointmentDTO:
+    properties:
+      duration:
+        example: 30
+        maximum: 480
+        minimum: 15
+        type: integer
+      notes:
+        example: First visit for this patient
+        maxLength: 1000
+        type: string
+      patient_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      priority:
+        enum:
+        - low
+        - normal
+        - high
+        - emergency
+        example: normal
+        type: string
+      reason:
+        example: Annual checkup
+        maxLength: 500
+        type: string
+      scheduled_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      type:
+        enum:
+        - consultation
+        - surgery
+        - vaccination
+        - emergency
+        - checkup
+        - grooming
+        example: consultation
+        type: string
+      veterinarian_id:
+        example: 507f1f77bcf86cd799439012
+        type: string
+    required:
+    - duration
+    - patient_id
+    - reason
+    - scheduled_at
+    - type
+    - veterinarian_id
+    type: object
+  internal_modules_appointments.MobileAppointmentRequestDTO:
+    properties:
+      owner_notes:
+        example: Additional information
+        maxLength: 1000
+        type: string
+      patient_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      priority:
+        enum:
+        - low
+        - normal
+        - high
+        - emergency
+        example: normal
+        type: string
+      reason:
+        example: My pet is not feeling well
+        maxLength: 500
+        type: string
+      scheduled_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      type:
+        enum:
+        - consultation
+        - surgery
+        - vaccination
+        - emergency
+        - checkup
+        - grooming
+        example: consultation
+        type: string
+    required:
+    - patient_id
+    - reason
+    - scheduled_at
+    - type
+    type: object
+  internal_modules_appointments.PaginatedAppointmentsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        type: array
+      pagination:
+        properties:
+          limit:
+            example: 20
+            type: integer
+          page:
+            example: 1
+            type: integer
+          total:
+            example: 100
+            type: integer
+          total_pages:
+            example: 5
+            type: integer
+        type: object
+    type: object
+  internal_modules_appointments.UpdateAppointmentDTO:
+    properties:
+      duration:
+        example: 45
+        maximum: 480
+        minimum: 15
+        type: integer
+      notes:
+        example: Updated notes
+        maxLength: 1000
+        type: string
+      priority:
+        enum:
+        - low
+        - normal
+        - high
+        - emergency
+        example: high
+        type: string
+      reason:
+        example: Updated reason
+        maxLength: 500
+        type: string
+      scheduled_at:
+        example: "2024-01-15T11:00:00Z"
+        type: string
+      type:
+        enum:
+        - consultation
+        - surgery
+        - vaccination
+        - emergency
+        - checkup
+        - grooming
+        example: surgery
+        type: string
+    type: object
+  internal_modules_appointments.UpdateStatusDTO:
+    properties:
+      reason:
+        example: Patient confirmed by phone
+        maxLength: 200
+        type: string
+      status:
+        enum:
+        - scheduled
+        - confirmed
+        - in_progress
+        - completed
+        - cancelled
+        - no_show
+        example: confirmed
+        type: string
+    required:
+    - status
+    type: object
   internal_modules_auth.LoginDTO:
     properties:
       email:
@@ -1359,6 +1644,382 @@ info:
   title: Vetsify API
   version: "1.0"
 paths:
+  /api/appointments:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of appointments with optional filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - collectionFormat: csv
+        description: Filter by status
+        in: query
+        items:
+          type: string
+        name: status
+        type: array
+      - collectionFormat: csv
+        description: Filter by appointment type
+        in: query
+        items:
+          type: string
+        name: type
+        type: array
+      - description: Filter by veterinarian ID
+        in: query
+        name: veterinarian_id
+        type: string
+      - description: Filter by patient ID
+        in: query
+        name: patient_id
+        type: string
+      - description: Filter by owner ID
+        in: query
+        name: owner_id
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: date_to
+        type: string
+      - description: Filter by priority
+        in: query
+        name: priority
+        type: string
+      - description: Populate related data
+        in: query
+        name: populate
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.PaginatedAppointmentsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List appointments
+      tags:
+      - admin-appointments
+    post:
+      consumes:
+      - application/json
+      description: Create a new appointment in the system
+      parameters:
+      - description: Appointment data
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_appointments.CreateAppointmentDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create appointment
+      tags:
+      - admin-appointments
+  /api/appointments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete an appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete appointment
+      tags:
+      - admin-appointments
+    get:
+      consumes:
+      - application/json
+      description: Get appointment details by ID
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Populate related data
+        in: query
+        name: populate
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get appointment
+      tags:
+      - admin-appointments
+    put:
+      consumes:
+      - application/json
+      description: Update appointment details
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated appointment data
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_appointments.UpdateAppointmentDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update appointment
+      tags:
+      - admin-appointments
+  /api/appointments/{id}/history:
+    get:
+      consumes:
+      - application/json
+      description: Get the status change history for an appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_appointments.AppointmentStatusTransitionResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get status history
+      tags:
+      - admin-appointments
+  /api/appointments/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of an appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status data
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_appointments.UpdateStatusDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update appointment status
+      tags:
+      - admin-appointments
+  /api/appointments/availability:
+    get:
+      consumes:
+      - application/json
+      description: Check if a veterinarian is available at a specific time
+      parameters:
+      - description: Veterinarian ID
+        in: query
+        name: veterinarian_id
+        required: true
+        type: string
+      - description: Scheduled time (RFC3339)
+        in: query
+        name: scheduled_at
+        required: true
+        type: string
+      - description: Duration in minutes
+        in: query
+        name: duration
+        required: true
+        type: integer
+      - description: Exclude appointment ID (for updates)
+        in: query
+        name: exclude_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.AvailabilityResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Check veterinarian availability
+      tags:
+      - admin-appointments
+  /api/appointments/calendar:
+    get:
+      consumes:
+      - application/json
+      description: Get appointments organized by date for calendar display
+      parameters:
+      - description: Start date (RFC3339)
+        in: query
+        name: date_from
+        required: true
+        type: string
+      - description: End date (RFC3339)
+        in: query
+        name: date_to
+        required: true
+        type: string
+      - description: Filter by veterinarian ID
+        in: query
+        name: veterinarian_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_appointments.CalendarViewResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get calendar view
+      tags:
+      - admin-appointments
   /api/auth/login:
     post:
       consumes:
@@ -3143,6 +3804,106 @@ paths:
       summary: Procesar webhook de pago
       tags:
       - webhooks
+  /mobile/appointments:
+    get:
+      consumes:
+      - application/json
+      description: Get appointments for the authenticated owner
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.PaginatedAppointmentsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - MobileBearerAuth: []
+      summary: Get owner appointments
+      tags:
+      - mobile-appointments
+  /mobile/appointments/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get appointment details for the authenticated owner
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - MobileBearerAuth: []
+      summary: Get owner appointment
+      tags:
+      - mobile-appointments
+  /mobile/appointments/request:
+    post:
+      consumes:
+      - application/json
+      description: Request a new appointment from mobile app
+      parameters:
+      - description: Appointment request data
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_appointments.MobileAppointmentRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - MobileBearerAuth: []
+      summary: Request appointment
+      tags:
+      - mobile-appointments
   /mobile/auth/login:
     post:
       consumes:

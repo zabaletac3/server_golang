@@ -55,3 +55,7 @@ func (m *MongoDB) Health(ctx context.Context) error {
 func (m *MongoDB) Close(ctx context.Context) error {
 	return m.client.Disconnect(ctx)
 }
+
+func (m *MongoDB) Database() *mongo.Database {
+	return m.database
+}

@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/eren_dev/go_server/internal/config"
+	"github.com/eren_dev/go_server/internal/modules/appointments"
 	"github.com/eren_dev/go_server/internal/modules/auth"
 	mobileAuth "github.com/eren_dev/go_server/internal/modules/mobile_auth"
 	"github.com/eren_dev/go_server/internal/modules/notifications"
@@ -96,6 +97,9 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		// Patients + Species (JWT + Tenant + RBAC)
 		patients.RegisterAdminRoutes(privateTenant, db)
 
+		// Appointments (JWT + Tenant + RBAC)
+		appointments.RegisterAdminRoutes(privateTenant, db)
+
 		// Mobile auth routes (public + owner-private)
 		mobileAuth.RegisterRoutes(mobilePublic, mobilePrivate, db, cfg)
 
@@ -104,6 +108,9 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 
 		// Mobile patients (owner-private + tenant)
 		patients.RegisterMobileRoutes(mobileTenant, db)
+
+		// Mobile appointments (owner-private + tenant)
+		appointments.RegisterMobileRoutes(mobileTenant, db)
 
 		// Mobile notifications (owner-private)
 		notifications.RegisterMobileRoutes(mobilePrivate, db, pushProvider)
