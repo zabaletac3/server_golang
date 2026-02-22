@@ -9,14 +9,19 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"log/slog"
+
 	"github.com/eren_dev/go_server/internal/app"
 	"github.com/eren_dev/go_server/internal/app/lifecycle"
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/health"
+	"github.com/eren_dev/go_server/internal/modules/notifications"
+	"github.com/eren_dev/go_server/internal/modules/owners"
 	"github.com/eren_dev/go_server/internal/platform/logger"
 	"github.com/eren_dev/go_server/internal/platform/notifications/fcm"
 	"github.com/eren_dev/go_server/internal/platform/payment"
 	"github.com/eren_dev/go_server/internal/platform/payment/wompi"
+	"github.com/eren_dev/go_server/internal/scheduler"
 	"github.com/eren_dev/go_server/internal/shared/database"
 )
 
@@ -134,6 +139,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	ownerRepo := owners.NewRepository(db)
+	notifSvc := notifications.NewService(notifications.NewRepository(db), notifications.NewStaffRepository(db), ownerRepo, pushProvider)
+	apptScheduler := scheduler.New(db, notifSvc, slog.Default())
+	apptScheduler.Start(ctx, workers)
+
 	logger.Default().Info(context.Background(), "server_running", "port", cfg.Port, "env", cfg.Env)
 
 	go func() {
@@ -145,6 +155,8 @@ func main() {
 	health.SetReady(true)
 
 	<-ctx.Done()
+
+	apptScheduler.Stop()
 
 	if db != nil {
 		if err := db.Close(context.Background()); err != nil {

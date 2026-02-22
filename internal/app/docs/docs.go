@@ -3490,6 +3490,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Populate related data",
+                        "name": "populate",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3501,6 +3507,73 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/mobile/appointments/{id}/cancel": {
+            "patch": {
+                "security": [
+                    {
+                        "MobileBearerAuth": []
+                    }
+                ],
+                "description": "Cancel an appointment from mobile app",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mobile-appointments"
+                ],
+                "summary": "Cancel appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancellation reason",
+                        "name": "cancel",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AppointmentCancelDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_appointments.AppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -4211,6 +4284,19 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_modules_appointments.AppointmentCancelDTO": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "Ya no necesito la cita"
+                }
+            }
+        },
         "internal_modules_appointments.AppointmentResponse": {
             "type": "object",
             "properties": {
@@ -4244,7 +4330,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "First visit"
                 },
-                "owner": {},
+                "owner": {
+                    "$ref": "#/definitions/internal_modules_appointments.OwnerSummary"
+                },
                 "owner_id": {
                     "type": "string",
                     "example": "507f1f77bcf86cd799439013"
@@ -4254,7 +4342,12 @@ const docTemplate = `{
                     "example": "Patient anxious"
                 },
                 "patient": {
-                    "description": "Populated data (will be filled when populate=true)"
+                    "description": "Populated data (will be filled when populate=true)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/internal_modules_appointments.PatientSummary"
+                        }
+                    ]
                 },
                 "patient_id": {
                     "type": "string",
@@ -4288,7 +4381,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2024-01-14T15:00:00Z"
                 },
-                "veterinarian": {},
+                "veterinarian": {
+                    "$ref": "#/definitions/internal_modules_appointments.VeterinarianSummary"
+                },
                 "veterinarian_id": {
                     "type": "string",
                     "example": "507f1f77bcf86cd799439014"
@@ -4487,6 +4582,23 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_modules_appointments.OwnerSummary": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_modules_appointments.PaginatedAppointmentsResponse": {
             "type": "object",
             "properties": {
@@ -4497,25 +4609,24 @@ const docTemplate = `{
                     }
                 },
                 "pagination": {
-                    "type": "object",
-                    "properties": {
-                        "limit": {
-                            "type": "integer",
-                            "example": 20
-                        },
-                        "page": {
-                            "type": "integer",
-                            "example": 1
-                        },
-                        "total": {
-                            "type": "integer",
-                            "example": 100
-                        },
-                        "total_pages": {
-                            "type": "integer",
-                            "example": 5
-                        }
-                    }
+                    "$ref": "#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo"
+                }
+            }
+        },
+        "internal_modules_appointments.PatientSummary": {
+            "type": "object",
+            "properties": {
+                "breed": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "species": {
+                    "type": "string"
                 }
             }
         },
@@ -4588,6 +4699,23 @@ const docTemplate = `{
                         "no_show"
                     ],
                     "example": "confirmed"
+                }
+            }
+        },
+        "internal_modules_appointments.VeterinarianSummary": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
                 }
             }
         },

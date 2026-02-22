@@ -3,6 +3,7 @@ package appointments
 import (
 	"time"
 
+	"github.com/eren_dev/go_server/internal/shared/pagination"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -36,6 +37,11 @@ type UpdateStatusDTO struct {
 	Reason string `json:"reason" binding:"omitempty,max=200" example:"Patient confirmed by phone"`
 }
 
+// AppointmentCancelDTO defines the structure for cancelling an appointment
+type AppointmentCancelDTO struct {
+	Reason string `json:"reason" binding:"required,max=200" example:"Ya no necesito la cita"`
+}
+
 // MobileAppointmentRequestDTO defines the structure for mobile appointment requests
 type MobileAppointmentRequestDTO struct {
 	PatientID   string    `json:"patient_id" binding:"required" example:"507f1f77bcf86cd799439011"`
@@ -47,6 +53,30 @@ type MobileAppointmentRequestDTO struct {
 }
 
 // Response DTOs
+
+// PatientSummary provides a summary of patient details
+type PatientSummary struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Species string `json:"species,omitempty"`
+	Breed   string `json:"breed,omitempty"`
+}
+
+// OwnerSummary provides a summary of owner details
+type OwnerSummary struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email,omitempty"`
+	Phone string `json:"phone,omitempty"`
+}
+
+// VeterinarianSummary provides a summary of veterinarian details
+type VeterinarianSummary struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email,omitempty"`
+	Phone string `json:"phone,omitempty"`
+}
 
 // AppointmentResponse defines the structure for appointment responses
 type AppointmentResponse struct {
@@ -71,9 +101,9 @@ type AppointmentResponse struct {
 	UpdatedAt      time.Time  `json:"updated_at" example:"2024-01-14T15:00:00Z"`
 
 	// Populated data (will be filled when populate=true)
-	Patient      interface{} `json:"patient,omitempty"`
-	Owner        interface{} `json:"owner,omitempty"`
-	Veterinarian interface{} `json:"veterinarian,omitempty"`
+	Patient      *PatientSummary      `json:"patient,omitempty"`
+	Owner        *OwnerSummary        `json:"owner,omitempty"`
+	Veterinarian *VeterinarianSummary `json:"veterinarian,omitempty"`
 }
 
 // AppointmentStatusTransitionResponse defines the structure for status transition responses
@@ -89,13 +119,8 @@ type AppointmentStatusTransitionResponse struct {
 
 // PaginatedAppointmentsResponse defines the structure for paginated appointment responses
 type PaginatedAppointmentsResponse struct {
-	Data       []AppointmentResponse `json:"data"`
-	Pagination struct {
-		Page       int   `json:"page" example:"1"`
-		Limit      int   `json:"limit" example:"20"`
-		Total      int64 `json:"total" example:"100"`
-		TotalPages int   `json:"total_pages" example:"5"`
-	} `json:"pagination"`
+	Data       []AppointmentResponse     `json:"data"`
+	Pagination pagination.PaginationInfo `json:"pagination"`
 }
 
 // CalendarViewResponse defines the structure for calendar view responses
@@ -123,22 +148,6 @@ type appointmentFilters struct {
 	DateFrom       *time.Time
 	DateTo         *time.Time
 	Priority       *string
-}
-
-// CreateAppointmentInternalDTO for internal service use
-type CreateAppointmentInternalDTO struct {
-	PatientID      primitive.ObjectID
-	OwnerID        primitive.ObjectID
-	VeterinarianID primitive.ObjectID
-	ScheduledAt    time.Time
-	Duration       int
-	Type           string
-	Priority       string
-	Reason         string
-	Notes          string
-	OwnerNotes     string
-	CreatedBy      primitive.ObjectID
-	TenantIds      []primitive.ObjectID
 }
 
 // Conversion functions
@@ -183,81 +192,15 @@ func (t *AppointmentStatusTransition) ToResponse() *AppointmentStatusTransitionR
 	}
 }
 
-// ToInternalDTO converts CreateAppointmentDTO to internal DTO
-func (dto *CreateAppointmentDTO) ToInternalDTO(ownerID, createdBy primitive.ObjectID, tenantIds []primitive.ObjectID) (*CreateAppointmentInternalDTO, error) {
-	patientID, err := primitive.ObjectIDFromHex(dto.PatientID)
-	if err != nil {
-		return nil, err
-	}
-
-	veterinarianID, err := primitive.ObjectIDFromHex(dto.VeterinarianID)
-	if err != nil {
-		return nil, err
-	}
-
-	priority := dto.Priority
-	if priority == "" {
-		priority = AppointmentPriorityNormal
-	}
-
-	return &CreateAppointmentInternalDTO{
-		PatientID:      patientID,
-		OwnerID:        ownerID,
-		VeterinarianID: veterinarianID,
-		ScheduledAt:    dto.ScheduledAt,
-		Duration:       dto.Duration,
-		Type:           dto.Type,
-		Priority:       priority,
-		Reason:         dto.Reason,
-		Notes:          dto.Notes,
-		CreatedBy:      createdBy,
-		TenantIds:      tenantIds,
-	}, nil
-}
-
-// ToEntity converts CreateAppointmentInternalDTO to Appointment entity
-func (dto *CreateAppointmentInternalDTO) ToEntity() *Appointment {
-	now := time.Now()
-
-	return &Appointment{
-		TenantIds:      dto.TenantIds,
-		PatientID:      dto.PatientID,
-		OwnerID:        dto.OwnerID,
-		VeterinarianID: dto.VeterinarianID,
-		ScheduledAt:    dto.ScheduledAt,
-		Duration:       dto.Duration,
-		Type:           dto.Type,
-		Status:         AppointmentStatusScheduled, // Default status
-		Priority:       dto.Priority,
-		Reason:         dto.Reason,
-		Notes:          dto.Notes,
-		OwnerNotes:     dto.OwnerNotes,
-		CreatedAt:      now,
-		UpdatedAt:      now,
-	}
-}
-
 // CreatePaginatedResponse creates a paginated response
-func CreatePaginatedResponse(appointments []Appointment, page, limit int, total int64) *PaginatedAppointmentsResponse {
+func CreatePaginatedResponse(appointments []Appointment, params pagination.Params, total int64) *PaginatedAppointmentsResponse {
 	data := make([]AppointmentResponse, len(appointments))
 	for i, appointment := range appointments {
 		data[i] = *appointment.ToResponse()
 	}
 
-	totalPages := int((total + int64(limit) - 1) / int64(limit))
-
 	return &PaginatedAppointmentsResponse{
-		Data: data,
-		Pagination: struct {
-			Page       int   `json:"page" example:"1"`
-			Limit      int   `json:"limit" example:"20"`
-			Total      int64 `json:"total" example:"100"`
-			TotalPages int   `json:"total_pages" example:"5"`
-		}{
-			Page:       page,
-			Limit:      limit,
-			Total:      total,
-			TotalPages: totalPages,
-		},
+		Data:       data,
+		Pagination: pagination.NewPaginationInfo(params, total),
 	}
 }

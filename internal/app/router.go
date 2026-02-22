@@ -98,7 +98,7 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		patients.RegisterAdminRoutes(privateTenant, db)
 
 		// Appointments (JWT + Tenant + RBAC)
-		appointments.RegisterAdminRoutes(privateTenant, db)
+		appointments.RegisterAdminRoutes(privateTenant, db, pushProvider)
 
 		// Mobile auth routes (public + owner-private)
 		mobileAuth.RegisterRoutes(mobilePublic, mobilePrivate, db, cfg)
@@ -110,7 +110,7 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		patients.RegisterMobileRoutes(mobileTenant, db)
 
 		// Mobile appointments (owner-private + tenant)
-		appointments.RegisterMobileRoutes(mobileTenant, db)
+		appointments.RegisterMobileRoutes(mobileTenant, db, pushProvider)
 
 		// Mobile notifications (owner-private)
 		notifications.RegisterMobileRoutes(mobilePrivate, db, pushProvider)

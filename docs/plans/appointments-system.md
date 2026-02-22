@@ -22,4 +22,5 @@ Implementar un sistema completo de gestión de citas veterinarias que permita a 
 ## Required Specs
 <!-- SPECS_START -->
 - appointments-architecture
+- appointments-fixes
 <!-- SPECS_END -->

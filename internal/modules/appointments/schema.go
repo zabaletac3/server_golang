@@ -8,8 +8,8 @@ import (
 
 // Appointment represents an appointment in the veterinary system
 type Appointment struct {
-	ID        primitive.ObjectID   `bson:"_id,omitempty"`
-	TenantIds []primitive.ObjectID `bson:"tenant_ids,omitempty"`
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	TenantID primitive.ObjectID `bson:"tenant_id" json:"tenant_id"`
 
 	// Core appointment data
 	PatientID      primitive.ObjectID `bson:"patient_id"`
@@ -45,14 +45,14 @@ type Appointment struct {
 
 // AppointmentStatusTransition tracks status changes for audit purposes
 type AppointmentStatusTransition struct {
-	ID            primitive.ObjectID   `bson:"_id,omitempty"`
-	TenantIds     []primitive.ObjectID `bson:"tenant_ids,omitempty"`
-	AppointmentID primitive.ObjectID   `bson:"appointment_id"`
-	FromStatus    string               `bson:"from_status"`
-	ToStatus      string               `bson:"to_status"`
-	ChangedBy     primitive.ObjectID   `bson:"changed_by"`
-	Reason        string               `bson:"reason,omitempty"`
-	CreatedAt     time.Time            `bson:"created_at"`
+	ID            primitive.ObjectID `bson:"_id,omitempty"`
+	TenantID      primitive.ObjectID `bson:"tenant_id" json:"tenant_id"`
+	AppointmentID primitive.ObjectID `bson:"appointment_id"`
+	FromStatus    string             `bson:"from_status"`
+	ToStatus      string             `bson:"to_status"`
+	ChangedBy     primitive.ObjectID `bson:"changed_by"`
+	Reason        string             `bson:"reason,omitempty"`
+	CreatedAt     time.Time          `bson:"created_at"`
 }
 
 // AppointmentType constants

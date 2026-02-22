@@ -5,8 +5,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/eren_dev/go_server/internal/shared/auth"
+	sharedMiddleware "github.com/eren_dev/go_server/internal/shared/middleware"
+	"github.com/eren_dev/go_server/internal/shared/pagination"
 	"github.com/eren_dev/go_server/internal/shared/validation"
 )
 
@@ -43,9 +46,15 @@ func (h *Handler) CreateAppointment(c *gin.Context) (any, error) {
 		return nil, validation.Validate(err)
 	}
 
-	userID := auth.GetUserID(c)
+	userIDStr := auth.GetUserID(c)
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		return nil, ErrValidationFailed("user_id", "invalid user ID format")
+	}
 
-	appointment, err := h.service.CreateAppointment(c.Request.Context(), dto, userID)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	appointment, err := h.service.CreateAppointment(c.Request.Context(), dto, tenantID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +82,9 @@ func (h *Handler) GetAppointment(c *gin.Context) (any, error) {
 	}
 
 	populate := c.Query("populate") == "true"
+	tenantID := sharedMiddleware.GetTenantID(c)
 
-	appointment, err := h.service.GetAppointment(c.Request.Context(), id, populate)
+	appointment, err := h.service.GetAppointment(c.Request.Context(), id, tenantID, populate)
 	if err != nil {
 		return nil, err
 	}
@@ -104,9 +114,9 @@ func (h *Handler) GetAppointment(c *gin.Context) (any, error) {
 // @Security BearerAuth
 // @Router /api/appointments [get]
 func (h *Handler) ListAppointments(c *gin.Context) (any, error) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	params := pagination.FromContext(c)
 	populate := c.Query("populate") == "true"
+	tenantID := sharedMiddleware.GetTenantID(c)
 
 	filters := make(map[string]interface{})
 
@@ -131,18 +141,26 @@ func (h *Handler) ListAppointments(c *gin.Context) (any, error) {
 	}
 
 	if dateFrom := c.Query("date_from"); dateFrom != "" {
-		filters["date_from"] = dateFrom
+		df, err := time.Parse(time.RFC3339, dateFrom)
+		if err != nil {
+			return nil, ErrValidationFailed("date_from", "invalid date format, use RFC3339")
+		}
+		filters["date_from"] = df
 	}
 
 	if dateTo := c.Query("date_to"); dateTo != "" {
-		filters["date_to"] = dateTo
+		dt, err := time.Parse(time.RFC3339, dateTo)
+		if err != nil {
+			return nil, ErrValidationFailed("date_to", "invalid date format, use RFC3339")
+		}
+		filters["date_to"] = dt
 	}
 
 	if priority := c.Query("priority"); priority != "" {
 		filters["priority"] = priority
 	}
 
-	appointments, err := h.service.ListAppointments(c.Request.Context(), filters, page, limit, populate)
+	appointments, err := h.service.ListAppointments(c.Request.Context(), filters, tenantID, params, populate)
 	if err != nil {
 		return nil, err
 	}
@@ -174,9 +192,15 @@ func (h *Handler) UpdateAppointment(c *gin.Context) (any, error) {
 		return nil, validation.Validate(err)
 	}
 
-	userID := auth.GetUserID(c)
+	userIDStr := auth.GetUserID(c)
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		return nil, ErrValidationFailed("user_id", "invalid user ID format")
+	}
 
-	appointment, err := h.service.UpdateAppointment(c.Request.Context(), id, dto, userID)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	appointment, err := h.service.UpdateAppointment(c.Request.Context(), id, dto, tenantID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -202,9 +226,15 @@ func (h *Handler) DeleteAppointment(c *gin.Context) (any, error) {
 		return nil, ErrValidationFailed("id", "appointment ID is required")
 	}
 
-	userID := auth.GetUserID(c)
+	userIDStr := auth.GetUserID(c)
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		return nil, ErrValidationFailed("user_id", "invalid user ID format")
+	}
 
-	err := h.service.DeleteAppointment(c.Request.Context(), id, userID)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	err = h.service.DeleteAppointment(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -236,9 +266,15 @@ func (h *Handler) UpdateStatus(c *gin.Context) (any, error) {
 		return nil, validation.Validate(err)
 	}
 
-	userID := auth.GetUserID(c)
+	userIDStr := auth.GetUserID(c)
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		return nil, ErrValidationFailed("user_id", "invalid user ID format")
+	}
 
-	appointment, err := h.service.UpdateStatus(c.Request.Context(), id, dto, userID)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	appointment, err := h.service.UpdateStatus(c.Request.Context(), id, dto, tenantID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +318,9 @@ func (h *Handler) GetCalendarView(c *gin.Context) (any, error) {
 		veterinarianID = &vetID
 	}
 
-	calendar, err := h.service.GetCalendarView(c.Request.Context(), dateFrom, dateTo, veterinarianID)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	calendar, err := h.service.GetCalendarView(c.Request.Context(), dateFrom, dateTo, veterinarianID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -328,7 +366,9 @@ func (h *Handler) CheckAvailability(c *gin.Context) (any, error) {
 		excludeID = &exclude
 	}
 
-	available, err := h.service.CheckAvailability(c.Request.Context(), vetID, scheduledAt, duration, excludeID)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	available, err := h.service.CheckAvailability(c.Request.Context(), vetID, scheduledAt, duration, excludeID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +394,9 @@ func (h *Handler) GetStatusHistory(c *gin.Context) (any, error) {
 		return nil, ErrValidationFailed("id", "appointment ID is required")
 	}
 
-	history, err := h.service.GetStatusHistory(c.Request.Context(), id)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	history, err := h.service.GetStatusHistory(c.Request.Context(), id, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -382,9 +424,15 @@ func (h *Handler) RequestAppointment(c *gin.Context) (any, error) {
 		return nil, validation.Validate(err)
 	}
 
-	ownerID := auth.GetUserID(c)
+	ownerIDStr := auth.GetUserID(c)
+	ownerID, err := primitive.ObjectIDFromHex(ownerIDStr)
+	if err != nil {
+		return nil, ErrValidationFailed("owner_id", "invalid owner ID format")
+	}
 
-	appointment, err := h.service.RequestAppointment(c.Request.Context(), dto, ownerID)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	appointment, err := h.service.RequestAppointment(c.Request.Context(), dto, tenantID, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -405,12 +453,17 @@ func (h *Handler) RequestAppointment(c *gin.Context) (any, error) {
 // @Security MobileBearerAuth
 // @Router /mobile/appointments [get]
 func (h *Handler) GetOwnerAppointments(c *gin.Context) (any, error) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	params := pagination.FromContext(c)
 
-	ownerID := auth.GetUserID(c)
+	ownerIDStr := auth.GetUserID(c)
+	ownerID, err := primitive.ObjectIDFromHex(ownerIDStr)
+	if err != nil {
+		return nil, ErrValidationFailed("owner_id", "invalid owner ID format")
+	}
 
-	appointments, err := h.service.GetOwnerAppointments(c.Request.Context(), ownerID, page, limit)
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	appointments, err := h.service.GetOwnerAppointments(c.Request.Context(), ownerID, tenantID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -425,6 +478,7 @@ func (h *Handler) GetOwnerAppointments(c *gin.Context) (any, error) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Appointment ID"
+// @Param populate query bool false "Populate related data"
 // @Success 200 {object} AppointmentResponse
 // @Failure 400 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
@@ -436,9 +490,57 @@ func (h *Handler) GetOwnerAppointment(c *gin.Context) (any, error) {
 		return nil, ErrValidationFailed("id", "appointment ID is required")
 	}
 
-	ownerID := auth.GetUserID(c)
+	ownerIDStr := auth.GetUserID(c)
+	ownerID, err := primitive.ObjectIDFromHex(ownerIDStr)
+	if err != nil {
+		return nil, ErrValidationFailed("owner_id", "invalid owner ID format")
+	}
 
-	appointment, err := h.service.GetOwnerAppointment(c.Request.Context(), id, ownerID)
+	tenantID := sharedMiddleware.GetTenantID(c)
+	populate := c.Query("populate") == "true"
+
+	appointment, err := h.service.GetOwnerAppointment(c.Request.Context(), id, tenantID, ownerID, populate)
+	if err != nil {
+		return nil, err
+	}
+
+	return appointment, nil
+}
+
+// CancelOwnerAppointment cancels an appointment by the owner
+// @Summary Cancel appointment
+// @Description Cancel an appointment from mobile app
+// @Tags mobile-appointments
+// @Accept json
+// @Produce json
+// @Param id path string true "Appointment ID"
+// @Param cancel body AppointmentCancelDTO true "Cancellation reason"
+// @Success 200 {object} AppointmentResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Security MobileBearerAuth
+// @Router /mobile/appointments/{id}/cancel [patch]
+func (h *Handler) CancelOwnerAppointment(c *gin.Context) (any, error) {
+	id := c.Param("id")
+	if id == "" {
+		return nil, ErrValidationFailed("id", "appointment ID is required")
+	}
+
+	var dto AppointmentCancelDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		return nil, validation.Validate(err)
+	}
+
+	ownerIDStr := auth.GetUserID(c)
+	ownerID, err := primitive.ObjectIDFromHex(ownerIDStr)
+	if err != nil {
+		return nil, ErrValidationFailed("owner_id", "invalid owner ID format")
+	}
+
+	tenantID := sharedMiddleware.GetTenantID(c)
+
+	appointment, err := h.service.CancelAppointment(c.Request.Context(), id, dto.Reason, tenantID, ownerID)
 	if err != nil {
 		return nil, err
 	}

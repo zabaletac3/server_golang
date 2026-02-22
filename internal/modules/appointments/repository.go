@@ -10,31 +10,38 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/eren_dev/go_server/internal/shared/database"
+	"github.com/eren_dev/go_server/internal/shared/pagination"
 )
 
 // AppointmentRepository defines the interface for appointment data access
 type AppointmentRepository interface {
 	// Basic CRUD operations
 	Create(ctx context.Context, appointment *Appointment) error
-	FindByID(ctx context.Context, id primitive.ObjectID, tenantIDs []primitive.ObjectID) (*Appointment, error)
-	List(ctx context.Context, filters appointmentFilters, tenantIDs []primitive.ObjectID, page, limit int) ([]Appointment, int64, error)
-	Update(ctx context.Context, id primitive.ObjectID, updates bson.M, tenantIDs []primitive.ObjectID) error
-	Delete(ctx context.Context, id primitive.ObjectID, tenantIDs []primitive.ObjectID) error
+	FindByID(ctx context.Context, id primitive.ObjectID, tenantID primitive.ObjectID) (*Appointment, error)
+	List(ctx context.Context, filters appointmentFilters, tenantID primitive.ObjectID, params pagination.Params) ([]Appointment, int64, error)
+	Update(ctx context.Context, id primitive.ObjectID, updates bson.M, tenantID primitive.ObjectID) error
+	Delete(ctx context.Context, id primitive.ObjectID, tenantID primitive.ObjectID) error
 
 	// Business-specific methods
-	FindByDateRange(ctx context.Context, from, to time.Time, tenantIDs []primitive.ObjectID) ([]Appointment, error)
-	FindByPatient(ctx context.Context, patientID primitive.ObjectID, tenantIDs []primitive.ObjectID, page, limit int) ([]Appointment, int64, error)
-	FindByOwner(ctx context.Context, ownerID primitive.ObjectID, tenantIDs []primitive.ObjectID, page, limit int) ([]Appointment, int64, error)
-	FindByVeterinarian(ctx context.Context, vetID primitive.ObjectID, from, to time.Time, tenantIDs []primitive.ObjectID) ([]Appointment, error)
-	CheckConflicts(ctx context.Context, vetID primitive.ObjectID, scheduledAt time.Time, duration int, excludeID *primitive.ObjectID, tenantIDs []primitive.ObjectID) (bool, error)
+	FindByDateRange(ctx context.Context, from, to time.Time, tenantID primitive.ObjectID) ([]Appointment, error)
+	FindByPatient(ctx context.Context, patientID primitive.ObjectID, tenantID primitive.ObjectID, params pagination.Params) ([]Appointment, int64, error)
+	FindByOwner(ctx context.Context, ownerID primitive.ObjectID, tenantID primitive.ObjectID, params pagination.Params) ([]Appointment, int64, error)
+	FindByVeterinarian(ctx context.Context, vetID primitive.ObjectID, from, to time.Time, tenantID primitive.ObjectID) ([]Appointment, error)
+	CheckConflicts(ctx context.Context, vetID primitive.ObjectID, scheduledAt time.Time, duration int, excludeID *primitive.ObjectID, tenantID primitive.ObjectID) (bool, error)
 
 	// Status transitions
 	CreateStatusTransition(ctx context.Context, transition *AppointmentStatusTransition) error
 	GetStatusHistory(ctx context.Context, appointmentID primitive.ObjectID) ([]AppointmentStatusTransition, error)
 
 	// Analytics and reporting
-	CountByStatus(ctx context.Context, status string, tenantIDs []primitive.ObjectID) (int64, error)
-	FindUpcoming(ctx context.Context, tenantIDs []primitive.ObjectID, hours int) ([]Appointment, error)
+	CountByStatus(ctx context.Context, status string, tenantID primitive.ObjectID) (int64, error)
+	FindUpcoming(ctx context.Context, tenantID primitive.ObjectID, hours int) ([]Appointment, error)
+
+	// Background jobs
+	FindUnconfirmedBefore(ctx context.Context, before time.Time) ([]Appointment, error)
+
+	// Setup
+	EnsureIndexes(ctx context.Context) error
 }
 
 // appointmentRepository implements AppointmentRepository interface
@@ -46,8 +53,8 @@ type appointmentRepository struct {
 // NewAppointmentRepository creates a new appointment repository
 func NewAppointmentRepository(db *database.MongoDB) AppointmentRepository {
 	return &appointmentRepository{
-		collection:           db.Database().Collection("appointments"),
-		transitionCollection: db.Database().Collection("appointment_status_transitions"),
+		collection:           db.Collection("appointments"),
+		transitionCollection: db.Collection("appointment_status_transitions"),
 	}
 }
 
@@ -66,10 +73,10 @@ func (r *appointmentRepository) Create(ctx context.Context, appointment *Appoint
 }
 
 // FindByID finds an appointment by ID
-func (r *appointmentRepository) FindByID(ctx context.Context, id primitive.ObjectID, tenantIDs []primitive.ObjectID) (*Appointment, error) {
+func (r *appointmentRepository) FindByID(ctx context.Context, id primitive.ObjectID, tenantID primitive.ObjectID) (*Appointment, error) {
 	filter := bson.M{
 		"_id":        id,
-		"tenant_ids": bson.M{"$in": tenantIDs},
+		"tenant_id":  tenantID,
 		"deleted_at": nil,
 	}
 
@@ -86,8 +93,8 @@ func (r *appointmentRepository) FindByID(ctx context.Context, id primitive.Objec
 }
 
 // List returns appointments with filters and pagination
-func (r *appointmentRepository) List(ctx context.Context, filters appointmentFilters, tenantIDs []primitive.ObjectID, page, limit int) ([]Appointment, int64, error) {
-	filter := r.buildFilter(filters, tenantIDs)
+func (r *appointmentRepository) List(ctx context.Context, filters appointmentFilters, tenantID primitive.ObjectID, params pagination.Params) ([]Appointment, int64, error) {
+	filter := r.buildFilter(filters, tenantID)
 
 	// Count total documents
 	total, err := r.collection.CountDocuments(ctx, filter)
@@ -95,13 +102,10 @@ func (r *appointmentRepository) List(ctx context.Context, filters appointmentFil
 		return nil, 0, err
 	}
 
-	// Calculate skip
-	skip := (page - 1) * limit
-
 	// Build options
 	opts := options.Find().
-		SetSkip(int64(skip)).
-		SetLimit(int64(limit)).
+		SetSkip(params.Skip).
+		SetLimit(params.Limit).
 		SetSort(bson.D{{Key: "scheduled_at", Value: 1}})
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
@@ -119,10 +123,10 @@ func (r *appointmentRepository) List(ctx context.Context, filters appointmentFil
 }
 
 // Update updates an appointment
-func (r *appointmentRepository) Update(ctx context.Context, id primitive.ObjectID, updates bson.M, tenantIDs []primitive.ObjectID) error {
+func (r *appointmentRepository) Update(ctx context.Context, id primitive.ObjectID, updates bson.M, tenantID primitive.ObjectID) error {
 	filter := bson.M{
 		"_id":        id,
-		"tenant_ids": bson.M{"$in": tenantIDs},
+		"tenant_id":  tenantID,
 		"deleted_at": nil,
 	}
 
@@ -141,10 +145,10 @@ func (r *appointmentRepository) Update(ctx context.Context, id primitive.ObjectI
 }
 
 // Delete soft deletes an appointment
-func (r *appointmentRepository) Delete(ctx context.Context, id primitive.ObjectID, tenantIDs []primitive.ObjectID) error {
+func (r *appointmentRepository) Delete(ctx context.Context, id primitive.ObjectID, tenantID primitive.ObjectID) error {
 	filter := bson.M{
 		"_id":        id,
-		"tenant_ids": bson.M{"$in": tenantIDs},
+		"tenant_id":  tenantID,
 		"deleted_at": nil,
 	}
 
@@ -168,9 +172,9 @@ func (r *appointmentRepository) Delete(ctx context.Context, id primitive.ObjectI
 }
 
 // FindByDateRange finds appointments within a date range
-func (r *appointmentRepository) FindByDateRange(ctx context.Context, from, to time.Time, tenantIDs []primitive.ObjectID) ([]Appointment, error) {
+func (r *appointmentRepository) FindByDateRange(ctx context.Context, from, to time.Time, tenantID primitive.ObjectID) ([]Appointment, error) {
 	filter := bson.M{
-		"tenant_ids": bson.M{"$in": tenantIDs},
+		"tenant_id":  tenantID,
 		"deleted_at": nil,
 		"scheduled_at": bson.M{
 			"$gte": from,
@@ -195,10 +199,10 @@ func (r *appointmentRepository) FindByDateRange(ctx context.Context, from, to ti
 }
 
 // FindByPatient finds appointments for a specific patient with pagination
-func (r *appointmentRepository) FindByPatient(ctx context.Context, patientID primitive.ObjectID, tenantIDs []primitive.ObjectID, page, limit int) ([]Appointment, int64, error) {
+func (r *appointmentRepository) FindByPatient(ctx context.Context, patientID primitive.ObjectID, tenantID primitive.ObjectID, params pagination.Params) ([]Appointment, int64, error) {
 	filter := bson.M{
 		"patient_id": patientID,
-		"tenant_ids": bson.M{"$in": tenantIDs},
+		"tenant_id":  tenantID,
 		"deleted_at": nil,
 	}
 
@@ -208,12 +212,9 @@ func (r *appointmentRepository) FindByPatient(ctx context.Context, patientID pri
 		return nil, 0, err
 	}
 
-	// Calculate skip
-	skip := (page - 1) * limit
-
 	opts := options.Find().
-		SetSkip(int64(skip)).
-		SetLimit(int64(limit)).
+		SetSkip(params.Skip).
+		SetLimit(params.Limit).
 		SetSort(bson.D{{Key: "scheduled_at", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
@@ -231,10 +232,10 @@ func (r *appointmentRepository) FindByPatient(ctx context.Context, patientID pri
 }
 
 // FindByOwner finds appointments for a specific owner with pagination
-func (r *appointmentRepository) FindByOwner(ctx context.Context, ownerID primitive.ObjectID, tenantIDs []primitive.ObjectID, page, limit int) ([]Appointment, int64, error) {
+func (r *appointmentRepository) FindByOwner(ctx context.Context, ownerID primitive.ObjectID, tenantID primitive.ObjectID, params pagination.Params) ([]Appointment, int64, error) {
 	filter := bson.M{
 		"owner_id":   ownerID,
-		"tenant_ids": bson.M{"$in": tenantIDs},
+		"tenant_id":  tenantID,
 		"deleted_at": nil,
 	}
 
@@ -244,12 +245,9 @@ func (r *appointmentRepository) FindByOwner(ctx context.Context, ownerID primiti
 		return nil, 0, err
 	}
 
-	// Calculate skip
-	skip := (page - 1) * limit
-
 	opts := options.Find().
-		SetSkip(int64(skip)).
-		SetLimit(int64(limit)).
+		SetSkip(params.Skip).
+		SetLimit(params.Limit).
 		SetSort(bson.D{{Key: "scheduled_at", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
@@ -267,10 +265,10 @@ func (r *appointmentRepository) FindByOwner(ctx context.Context, ownerID primiti
 }
 
 // FindByVeterinarian finds appointments for a specific veterinarian within a date range
-func (r *appointmentRepository) FindByVeterinarian(ctx context.Context, vetID primitive.ObjectID, from, to time.Time, tenantIDs []primitive.ObjectID) ([]Appointment, error) {
+func (r *appointmentRepository) FindByVeterinarian(ctx context.Context, vetID primitive.ObjectID, from, to time.Time, tenantID primitive.ObjectID) ([]Appointment, error) {
 	filter := bson.M{
 		"veterinarian_id": vetID,
-		"tenant_ids":      bson.M{"$in": tenantIDs},
+		"tenant_id":       tenantID,
 		"deleted_at":      nil,
 		"scheduled_at": bson.M{
 			"$gte": from,
@@ -295,12 +293,12 @@ func (r *appointmentRepository) FindByVeterinarian(ctx context.Context, vetID pr
 }
 
 // CheckConflicts checks if there are conflicting appointments
-func (r *appointmentRepository) CheckConflicts(ctx context.Context, vetID primitive.ObjectID, scheduledAt time.Time, duration int, excludeID *primitive.ObjectID, tenantIDs []primitive.ObjectID) (bool, error) {
+func (r *appointmentRepository) CheckConflicts(ctx context.Context, vetID primitive.ObjectID, scheduledAt time.Time, duration int, excludeID *primitive.ObjectID, tenantID primitive.ObjectID) (bool, error) {
 	endTime := scheduledAt.Add(time.Duration(duration) * time.Minute)
 
 	filter := bson.M{
 		"veterinarian_id": vetID,
-		"tenant_ids":      bson.M{"$in": tenantIDs},
+		"tenant_id":       tenantID,
 		"deleted_at":      nil,
 		"status": bson.M{"$nin": []string{
 			AppointmentStatusCancelled,
@@ -388,10 +386,10 @@ func (r *appointmentRepository) GetStatusHistory(ctx context.Context, appointmen
 }
 
 // CountByStatus counts appointments by status
-func (r *appointmentRepository) CountByStatus(ctx context.Context, status string, tenantIDs []primitive.ObjectID) (int64, error) {
+func (r *appointmentRepository) CountByStatus(ctx context.Context, status string, tenantID primitive.ObjectID) (int64, error) {
 	filter := bson.M{
 		"status":     status,
-		"tenant_ids": bson.M{"$in": tenantIDs},
+		"tenant_id":  tenantID,
 		"deleted_at": nil,
 	}
 
@@ -399,18 +397,21 @@ func (r *appointmentRepository) CountByStatus(ctx context.Context, status string
 }
 
 // FindUpcoming finds upcoming appointments within specified hours
-func (r *appointmentRepository) FindUpcoming(ctx context.Context, tenantIDs []primitive.ObjectID, hours int) ([]Appointment, error) {
+func (r *appointmentRepository) FindUpcoming(ctx context.Context, tenantID primitive.ObjectID, hours int) ([]Appointment, error) {
 	now := time.Now()
 	futureTime := now.Add(time.Duration(hours) * time.Hour)
 
 	filter := bson.M{
-		"tenant_ids": bson.M{"$in": tenantIDs},
 		"deleted_at": nil,
 		"status":     bson.M{"$in": []string{AppointmentStatusScheduled, AppointmentStatusConfirmed}},
 		"scheduled_at": bson.M{
 			"$gte": now,
 			"$lte": futureTime,
 		},
+	}
+
+	if !tenantID.IsZero() {
+		filter["tenant_id"] = tenantID
 	}
 
 	opts := options.Find().SetSort(bson.D{{Key: "scheduled_at", Value: 1}})
@@ -429,10 +430,54 @@ func (r *appointmentRepository) FindUpcoming(ctx context.Context, tenantIDs []pr
 	return appointments, nil
 }
 
-// buildFilter constructs MongoDB filter from appointmentFilters
-func (r *appointmentRepository) buildFilter(filters appointmentFilters, tenantIDs []primitive.ObjectID) bson.M {
+// FindUnconfirmedBefore finds unconfirmed appointments scheduled before a certain time
+func (r *appointmentRepository) FindUnconfirmedBefore(ctx context.Context, before time.Time) ([]Appointment, error) {
 	filter := bson.M{
-		"tenant_ids": bson.M{"$in": tenantIDs},
+		"status":     AppointmentStatusScheduled,
+		"created_at": bson.M{"$lt": before},
+		"deleted_at": nil,
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var appointments []Appointment
+	if err := cursor.All(ctx, &appointments); err != nil {
+		return nil, err
+	}
+	return appointments, nil
+}
+
+// EnsureIndexes creates necessary indexes for the collections
+func (r *appointmentRepository) EnsureIndexes(ctx context.Context) error {
+	indexes := []mongo.IndexModel{
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "scheduled_at", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "veterinarian_id", Value: 1}, {Key: "scheduled_at", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "patient_id", Value: 1}, {Key: "scheduled_at", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "owner_id", Value: 1}, {Key: "scheduled_at", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "scheduled_at", Value: 1}}},
+		{Keys: bson.D{{Key: "deleted_at", Value: 1}}, Options: options.Index().SetSparse(true)},
+	}
+	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		return err
+	}
+
+	transitionIndexes := []mongo.IndexModel{
+		{Keys: bson.D{{Key: "appointment_id", Value: 1}, {Key: "created_at", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "changed_by", Value: 1}, {Key: "created_at", Value: -1}}},
+	}
+	_, err = r.transitionCollection.Indexes().CreateMany(ctx, transitionIndexes)
+	return err
+}
+
+// buildFilter constructs MongoDB filter from appointmentFilters
+func (r *appointmentRepository) buildFilter(filters appointmentFilters, tenantID primitive.ObjectID) bson.M {
+	filter := bson.M{
+		"tenant_id":  tenantID,
 		"deleted_at": nil,
 	}
 

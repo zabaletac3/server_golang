@@ -38,6 +38,15 @@ definitions:
           $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_validation.FieldError'
         type: array
     type: object
+  internal_modules_appointments.AppointmentCancelDTO:
+    properties:
+      reason:
+        example: Ya no necesito la cita
+        maxLength: 200
+        type: string
+    required:
+    - reason
+    type: object
   internal_modules_appointments.AppointmentResponse:
     properties:
       cancel_reason:
@@ -62,7 +71,8 @@ definitions:
       notes:
         example: First visit
         type: string
-      owner: {}
+      owner:
+        $ref: '#/definitions/internal_modules_appointments.OwnerSummary'
       owner_id:
         example: 507f1f77bcf86cd799439013
         type: string
@@ -70,6 +80,8 @@ definitions:
         example: Patient anxious
         type: string
       patient:
+        allOf:
+        - $ref: '#/definitions/internal_modules_appointments.PatientSummary'
         description: Populated data (will be filled when populate=true)
       patient_id:
         example: 507f1f77bcf86cd799439012
@@ -95,7 +107,8 @@ definitions:
       updated_at:
         example: "2024-01-14T15:00:00Z"
         type: string
-      veterinarian: {}
+      veterinarian:
+        $ref: '#/definitions/internal_modules_appointments.VeterinarianSummary'
       veterinarian_id:
         example: 507f1f77bcf86cd799439014
         type: string
@@ -245,6 +258,17 @@ definitions:
     - scheduled_at
     - type
     type: object
+  internal_modules_appointments.OwnerSummary:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
   internal_modules_appointments.PaginatedAppointmentsResponse:
     properties:
       data:
@@ -252,20 +276,18 @@ definitions:
           $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
         type: array
       pagination:
-        properties:
-          limit:
-            example: 20
-            type: integer
-          page:
-            example: 1
-            type: integer
-          total:
-            example: 100
-            type: integer
-          total_pages:
-            example: 5
-            type: integer
-        type: object
+        $ref: '#/definitions/github_com_eren_dev_go_server_internal_shared_pagination.PaginationInfo'
+    type: object
+  internal_modules_appointments.PatientSummary:
+    properties:
+      breed:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      species:
+        type: string
     type: object
   internal_modules_appointments.UpdateAppointmentDTO:
     properties:
@@ -322,6 +344,17 @@ definitions:
         type: string
     required:
     - status
+    type: object
+  internal_modules_appointments.VeterinarianSummary:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
     type: object
   internal_modules_auth.LoginDTO:
     properties:
@@ -3848,6 +3881,10 @@ paths:
         name: id
         required: true
         type: string
+      - description: Populate related data
+        in: query
+        name: populate
+        type: boolean
       produces:
       - application/json
       responses:
@@ -3868,6 +3905,50 @@ paths:
       security:
       - MobileBearerAuth: []
       summary: Get owner appointment
+      tags:
+      - mobile-appointments
+  /mobile/appointments/{id}/cancel:
+    patch:
+      consumes:
+      - application/json
+      description: Cancel an appointment from mobile app
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cancellation reason
+        in: body
+        name: cancel
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_appointments.AppointmentCancelDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_appointments.AppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - MobileBearerAuth: []
+      summary: Cancel appointment
       tags:
       - mobile-appointments
   /mobile/appointments/request:
