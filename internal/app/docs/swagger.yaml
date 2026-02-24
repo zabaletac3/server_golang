@@ -725,6 +725,172 @@ definitions:
       unit:
         type: string
     type: object
+  internal_modules_laboratory.CreateLabOrderDTO:
+    properties:
+      cost:
+        minimum: 0
+        type: number
+      lab_id:
+        type: string
+      notes:
+        type: string
+      patient_id:
+        type: string
+      test_type:
+        enum:
+        - blood
+        - urine
+        - biopsy
+        - stool
+        - skin
+        - ear
+        - other
+        type: string
+      veterinarian_id:
+        type: string
+    required:
+    - patient_id
+    - test_type
+    - veterinarian_id
+    type: object
+  internal_modules_laboratory.CreateLabTestDTO:
+    properties:
+      active:
+        type: boolean
+      category:
+        type: string
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      price:
+        minimum: 0
+        type: number
+      turnaround_time:
+        minimum: 1
+        type: integer
+    required:
+    - category
+    - name
+    - price
+    - turnaround_time
+    type: object
+  internal_modules_laboratory.LabOrderResponse:
+    properties:
+      collection_date:
+        type: string
+      cost:
+        type: number
+      created_at:
+        type: string
+      id:
+        type: string
+      lab_id:
+        type: string
+      notes:
+        type: string
+      order_date:
+        type: string
+      owner_id:
+        type: string
+      patient_id:
+        type: string
+      result_date:
+        type: string
+      result_file_id:
+        type: string
+      status:
+        type: string
+      tenant_id:
+        type: string
+      test_type:
+        type: string
+      updated_at:
+        type: string
+      veterinarian_id:
+        type: string
+    type: object
+  internal_modules_laboratory.LabTestResponse:
+    properties:
+      active:
+        type: boolean
+      category:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      tenant_id:
+        type: string
+      turnaround_time:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  internal_modules_laboratory.UpdateLabOrderDTO:
+    properties:
+      cost:
+        minimum: 0
+        type: number
+      lab_id:
+        type: string
+      notes:
+        type: string
+      test_type:
+        type: string
+    type: object
+  internal_modules_laboratory.UpdateLabOrderStatusDTO:
+    properties:
+      collection_date:
+        description: RFC3339
+        type: string
+      notes:
+        type: string
+      status:
+        enum:
+        - pending
+        - collected
+        - sent
+        - received
+        - processed
+        type: string
+    required:
+    - status
+    type: object
+  internal_modules_laboratory.UpdateLabTestDTO:
+    properties:
+      active:
+        type: boolean
+      category:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        minimum: 0
+        type: number
+      turnaround_time:
+        minimum: 1
+        type: integer
+    type: object
+  internal_modules_laboratory.UploadLabResultDTO:
+    properties:
+      notes:
+        type: string
+      result_file_id:
+        type: string
+    required:
+    - result_file_id
+    type: object
   internal_modules_medical_records.AllergyResponse:
     properties:
       allergen:
@@ -3311,6 +3477,511 @@ paths:
       summary: Update category
       tags:
       - inventory
+  /api/lab-orders:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of lab orders with optional filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by patient ID
+        in: query
+        name: patient_id
+        type: string
+      - description: Filter by veterinarian ID
+        in: query
+        name: veterinarian_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Filter by test type
+        in: query
+        name: test_type
+        type: string
+      - description: Filter by lab ID
+        in: query
+        name: lab_id
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: date_to
+        type: string
+      - description: Filter overdue orders
+        in: query
+        name: overdue
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List lab orders
+      tags:
+      - laboratory
+    post:
+      consumes:
+      - application/json
+      description: Create a new laboratory order for a patient
+      parameters:
+      - description: Lab order data
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_laboratory.CreateLabOrderDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_laboratory.LabOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create lab order
+      tags:
+      - laboratory
+  /api/lab-orders/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a lab order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete lab order
+      tags:
+      - laboratory
+    get:
+      consumes:
+      - application/json
+      description: Get lab order details by ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_laboratory.LabOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get lab order
+      tags:
+      - laboratory
+    put:
+      consumes:
+      - application/json
+      description: Update lab order details
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated order data
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_laboratory.UpdateLabOrderDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_laboratory.LabOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update lab order
+      tags:
+      - laboratory
+  /api/lab-orders/{id}/result:
+    post:
+      consumes:
+      - application/json
+      description: Upload a result file for a lab order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Result file ID
+        in: body
+        name: result
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_laboratory.UploadLabResultDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_laboratory.LabOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload lab result
+      tags:
+      - laboratory
+  /api/lab-orders/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of a lab order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_laboratory.UpdateLabOrderStatusDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_laboratory.LabOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update lab order status
+      tags:
+      - laboratory
+  /api/lab-orders/overdue:
+    get:
+      consumes:
+      - application/json
+      description: Get lab orders that are past their turnaround time
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_laboratory.LabOrderResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get overdue lab orders
+      tags:
+      - laboratory
+  /api/lab-orders/patient/{patient_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all lab orders for a specific patient
+      parameters:
+      - description: Patient ID
+        in: path
+        name: patient_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get patient lab orders
+      tags:
+      - laboratory
+  /api/lab-tests:
+    get:
+      consumes:
+      - application/json
+      description: Get all lab tests for the tenant
+      parameters:
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - description: Filter by active status
+        in: query
+        name: active
+        type: boolean
+      - description: Search by name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_laboratory.LabTestResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List lab tests
+      tags:
+      - laboratory
+    post:
+      consumes:
+      - application/json
+      description: Create a new lab test catalog entry
+      parameters:
+      - description: Lab test data
+        in: body
+        name: test
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_laboratory.CreateLabTestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_laboratory.LabTestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create lab test
+      tags:
+      - laboratory
+  /api/lab-tests/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a lab test from the catalog
+      parameters:
+      - description: Test ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete lab test
+      tags:
+      - laboratory
+    get:
+      consumes:
+      - application/json
+      description: Get lab test details by ID
+      parameters:
+      - description: Test ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_laboratory.LabTestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get lab test
+      tags:
+      - laboratory
+    put:
+      consumes:
+      - application/json
+      description: Update lab test details
+      parameters:
+      - description: Test ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated test data
+        in: body
+        name: test
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_laboratory.UpdateLabTestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_laboratory.LabTestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update lab test
+      tags:
+      - laboratory
   /api/medical-history:
     post:
       consumes:

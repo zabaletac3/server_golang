@@ -10,6 +10,7 @@ import (
 	"github.com/eren_dev/go_server/internal/modules/appointments"
 	"github.com/eren_dev/go_server/internal/modules/auth"
 	"github.com/eren_dev/go_server/internal/modules/inventory"
+	"github.com/eren_dev/go_server/internal/modules/laboratory"
 	"github.com/eren_dev/go_server/internal/modules/medical_records"
 	"github.com/eren_dev/go_server/internal/modules/vaccinations"
 	mobileAuth "github.com/eren_dev/go_server/internal/modules/mobile_auth"
@@ -157,6 +158,9 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		// Vaccinations (JWT + Tenant + RBAC)
 		vaccinations.RegisterAdminRoutes(privateTenant, db)
 
+		// Laboratory (JWT + Tenant + RBAC)
+		laboratory.RegisterAdminRoutes(privateTenant, db)
+
 		// Mobile auth routes (public + owner-private)
 		mobileAuth.RegisterRoutes(mobilePublic, mobilePrivate, db, cfg)
 
@@ -174,6 +178,9 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 
 		// Mobile vaccinations (owner-private + tenant, read-only)
 		vaccinations.RegisterMobileRoutes(mobileTenant, db)
+
+		// Mobile laboratory (owner-private + tenant, read-only)
+		laboratory.RegisterMobileRoutes(mobileTenant, db)
 
 		// Mobile notifications (owner-private)
 		notifications.RegisterMobileRoutes(mobilePrivate, db, pushProvider)
