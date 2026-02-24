@@ -15,6 +15,7 @@ const (
 	TypeAppointmentCancelled NotificationType = "appointment_cancelled"
 	TypeAppointmentReminder  NotificationType = "appointment_reminder"
 	TypeVaccinationDue       NotificationType = "vaccination_due"
+	TypeMedicalRecordCreated NotificationType = "medical_record_created"
 	TypeMedicalRecordUpdated NotificationType = "medical_record_updated"
 	TypePrescriptionReady    NotificationType = "prescription_ready"
 	TypeGeneral              NotificationType = "general"

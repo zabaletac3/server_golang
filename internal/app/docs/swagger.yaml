@@ -464,6 +464,308 @@ definitions:
     - HealthStatusHealthy
     - HealthStatusUnhealthy
     - HealthStatusDegraded
+  internal_modules_medical_records.AllergyResponse:
+    properties:
+      allergen:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      patient_id:
+        type: string
+      severity:
+        type: string
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_medical_records.CreateAllergyDTO:
+    properties:
+      allergen:
+        maxLength: 100
+        minLength: 1
+        type: string
+      description:
+        type: string
+      patient_id:
+        type: string
+      severity:
+        enum:
+        - mild
+        - moderate
+        - severe
+        type: string
+    required:
+    - allergen
+    - patient_id
+    - severity
+    type: object
+  internal_modules_medical_records.CreateMedicalHistoryDTO:
+    properties:
+      blood_type:
+        type: string
+      chronic_conditions:
+        items:
+          type: string
+        type: array
+      patient_id:
+        type: string
+      previous_surgeries:
+        items:
+          type: string
+        type: array
+      risk_factors:
+        items:
+          type: string
+        type: array
+    required:
+    - patient_id
+    type: object
+  internal_modules_medical_records.CreateMedicalRecordDTO:
+    properties:
+      appointment_id:
+        type: string
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      chief_complaint:
+        maxLength: 500
+        minLength: 1
+        type: string
+      diagnosis:
+        type: string
+      evolution_notes:
+        type: string
+      medications:
+        items:
+          $ref: '#/definitions/internal_modules_medical_records.MedicationDTO'
+        type: array
+      next_visit_date:
+        description: RFC3339
+        type: string
+      patient_id:
+        type: string
+      symptoms:
+        type: string
+      temperature:
+        maximum: 45
+        minimum: 30
+        type: number
+      treatment:
+        type: string
+      type:
+        enum:
+        - consultation
+        - emergency
+        - surgery
+        - checkup
+        - vaccination
+        type: string
+      veterinarian_id:
+        type: string
+      weight:
+        minimum: 0
+        type: number
+    required:
+    - chief_complaint
+    - patient_id
+    - type
+    - veterinarian_id
+    type: object
+  internal_modules_medical_records.MedicalHistoryResponse:
+    properties:
+      blood_type:
+        type: string
+      chronic_conditions:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      id:
+        type: string
+      patient_id:
+        type: string
+      previous_surgeries:
+        items:
+          type: string
+        type: array
+      risk_factors:
+        items:
+          type: string
+        type: array
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_medical_records.MedicalRecordResponse:
+    properties:
+      appointment_id:
+        type: string
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      chief_complaint:
+        type: string
+      created_at:
+        type: string
+      diagnosis:
+        type: string
+      evolution_notes:
+        type: string
+      id:
+        type: string
+      medications:
+        items:
+          $ref: '#/definitions/internal_modules_medical_records.Medication'
+        type: array
+      next_visit_date:
+        type: string
+      owner_id:
+        type: string
+      patient_id:
+        type: string
+      symptoms:
+        type: string
+      temperature:
+        type: number
+      tenant_id:
+        type: string
+      treatment:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+      veterinarian_id:
+        type: string
+      weight:
+        type: number
+    type: object
+  internal_modules_medical_records.MedicalTimeline:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/internal_modules_medical_records.TimelineEntry'
+        type: array
+      patient_id:
+        type: string
+      patient_name:
+        type: string
+      total_count:
+        type: integer
+    type: object
+  internal_modules_medical_records.Medication:
+    properties:
+      dose:
+        type: string
+      duration:
+        type: string
+      frequency:
+        type: string
+      name:
+        type: string
+    type: object
+  internal_modules_medical_records.MedicationDTO:
+    properties:
+      dose:
+        maxLength: 100
+        minLength: 1
+        type: string
+      duration:
+        maxLength: 100
+        minLength: 1
+        type: string
+      frequency:
+        maxLength: 100
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - dose
+    - duration
+    - frequency
+    - name
+    type: object
+  internal_modules_medical_records.TimelineEntry:
+    properties:
+      date:
+        type: string
+      description:
+        type: string
+      record_id:
+        type: string
+      type:
+        description: consultation, vaccination, surgery, etc.
+        type: string
+      veterinarian:
+        type: string
+    type: object
+  internal_modules_medical_records.UpdateAllergyDTO:
+    properties:
+      allergen:
+        type: string
+      description:
+        type: string
+      severity:
+        type: string
+    type: object
+  internal_modules_medical_records.UpdateMedicalHistoryDTO:
+    properties:
+      blood_type:
+        type: string
+      chronic_conditions:
+        items:
+          type: string
+        type: array
+      previous_surgeries:
+        items:
+          type: string
+        type: array
+      risk_factors:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_modules_medical_records.UpdateMedicalRecordDTO:
+    properties:
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      diagnosis:
+        type: string
+      evolution_notes:
+        type: string
+      medications:
+        items:
+          $ref: '#/definitions/internal_modules_medical_records.MedicationDTO'
+        type: array
+      next_visit_date:
+        description: RFC3339
+        type: string
+      symptoms:
+        type: string
+      temperature:
+        maximum: 45
+        minimum: 30
+        type: number
+      treatment:
+        type: string
+      weight:
+        minimum: 0
+        type: number
+    type: object
   internal_modules_mobile_auth.LoginDTO:
     properties:
       email:
@@ -554,6 +856,7 @@ definitions:
     - appointment_cancelled
     - appointment_reminder
     - vaccination_due
+    - medical_record_created
     - medical_record_updated
     - prescription_ready
     - general
@@ -563,6 +866,7 @@ definitions:
     - TypeAppointmentCancelled
     - TypeAppointmentReminder
     - TypeVaccinationDue
+    - TypeMedicalRecordCreated
     - TypeMedicalRecordUpdated
     - TypePrescriptionReady
     - TypeGeneral
@@ -1711,6 +2015,143 @@ info:
   title: Vetsify API
   version: "1.0"
 paths:
+  /api/allergies:
+    post:
+      consumes:
+      - application/json
+      description: Register a new allergy for a patient
+      parameters:
+      - description: Allergy data
+        in: body
+        name: allergy
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_medical_records.CreateAllergyDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.AllergyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create allergy
+      tags:
+      - medical-records
+  /api/allergies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete an allergy
+      parameters:
+      - description: Allergy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete allergy
+      tags:
+      - medical-records
+    put:
+      consumes:
+      - application/json
+      description: Update allergy details
+      parameters:
+      - description: Allergy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated allergy data
+        in: body
+        name: allergy
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_medical_records.UpdateAllergyDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.AllergyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update allergy
+      tags:
+      - medical-records
+  /api/allergies/patient/{patient_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all allergies for a specific patient
+      parameters:
+      - description: Patient ID
+        in: path
+        name: patient_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_medical_records.AllergyResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get patient allergies
+      tags:
+      - medical-records
   /api/appointments:
     get:
       consumes:
@@ -2294,6 +2735,431 @@ paths:
       summary: Registrar usuario
       tags:
       - auth
+  /api/medical-history:
+    post:
+      consumes:
+      - application/json
+      description: Create or update medical history summary for a patient
+      parameters:
+      - description: Medical history data
+        in: body
+        name: history
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_medical_records.CreateMedicalHistoryDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.MedicalHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create/Update medical history
+      tags:
+      - medical-records
+  /api/medical-history/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete medical history
+      parameters:
+      - description: History ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete medical history
+      tags:
+      - medical-records
+    put:
+      consumes:
+      - application/json
+      description: Update medical history summary
+      parameters:
+      - description: History ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated history data
+        in: body
+        name: history
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_medical_records.UpdateMedicalHistoryDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.MedicalHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update medical history
+      tags:
+      - medical-records
+  /api/medical-history/patient/{patient_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get medical history summary for a specific patient
+      parameters:
+      - description: Patient ID
+        in: path
+        name: patient_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.MedicalHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get medical history
+      tags:
+      - medical-records
+  /api/medical-records:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of medical records with optional filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by patient ID
+        in: query
+        name: patient_id
+        type: string
+      - description: Filter by veterinarian ID
+        in: query
+        name: veterinarian_id
+        type: string
+      - description: Filter by type
+        in: query
+        name: type
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: date_to
+        type: string
+      - description: Filter records with attachments
+        in: query
+        name: has_attachments
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List medical records
+      tags:
+      - medical-records
+    post:
+      consumes:
+      - application/json
+      description: Create a new medical record for a patient
+      parameters:
+      - description: Medical record data
+        in: body
+        name: record
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_medical_records.CreateMedicalRecordDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.MedicalRecordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create medical record
+      tags:
+      - medical-records
+  /api/medical-records/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a medical record
+      parameters:
+      - description: Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete medical record
+      tags:
+      - medical-records
+    get:
+      consumes:
+      - application/json
+      description: Get medical record details by ID
+      parameters:
+      - description: Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.MedicalRecordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get medical record
+      tags:
+      - medical-records
+    put:
+      consumes:
+      - application/json
+      description: Update medical record (only within 24 hours of creation)
+      parameters:
+      - description: Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated record data
+        in: body
+        name: record
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_medical_records.UpdateMedicalRecordDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.MedicalRecordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update medical record
+      tags:
+      - medical-records
+  /api/medical-records/patient/{patient_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all medical records for a specific patient
+      parameters:
+      - description: Patient ID
+        in: path
+        name: patient_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get patient records
+      tags:
+      - medical-records
+  /api/medical-records/patient/{patient_id}/timeline:
+    get:
+      consumes:
+      - application/json
+      description: Get chronological medical timeline for a patient
+      parameters:
+      - description: Patient ID
+        in: path
+        name: patient_id
+        required: true
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: date_to
+        type: string
+      - description: Filter by record type
+        in: query
+        name: record_type
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 50
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_medical_records.MedicalTimeline'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get patient timeline
+      tags:
+      - medical-records
   /api/notifications:
     get:
       parameters:
