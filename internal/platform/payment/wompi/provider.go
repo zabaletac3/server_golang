@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eren_dev/go_server/internal/platform/circuitbreaker"
 	"github.com/eren_dev/go_server/internal/platform/payment"
 )
 
@@ -90,6 +91,16 @@ type paymentLinkResponse struct {
 
 // CreateSubscription crea un Payment Link en Wompi para que el usuario pague
 func (w *WompiProvider) CreateSubscription(ctx context.Context, req *payment.SubscriptionRequest) (*payment.SubscriptionResponse, error) {
+	result, err := circuitbreaker.ExecuteWithPaymentBreaker(func() (interface{}, error) {
+		return w.createSubscriptionImpl(ctx, req)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*payment.SubscriptionResponse), nil
+}
+
+func (w *WompiProvider) createSubscriptionImpl(ctx context.Context, req *payment.SubscriptionRequest) (*payment.SubscriptionResponse, error) {
 	redirectURL := req.RedirectURL
 	if redirectURL == "" {
 		redirectURL = w.redirectURL
@@ -167,6 +178,16 @@ func (w *WompiProvider) CancelSubscription(ctx context.Context, subscriptionID s
 
 // GetSubscription obtiene información de una transacción en Wompi
 func (w *WompiProvider) GetSubscription(ctx context.Context, subscriptionID string) (*payment.SubscriptionResponse, error) {
+	result, err := circuitbreaker.ExecuteWithPaymentBreaker(func() (interface{}, error) {
+		return w.getSubscriptionImpl(ctx, subscriptionID)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*payment.SubscriptionResponse), nil
+}
+
+func (w *WompiProvider) getSubscriptionImpl(ctx context.Context, subscriptionID string) (*payment.SubscriptionResponse, error) {
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", w.baseURL+"/transactions/"+subscriptionID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)

@@ -20,6 +20,7 @@ func RequestID() gin.HandlerFunc {
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Header(headerRequestID, rid)
+		c.Set("request_id", rid)
 
 		c.Next()
 	}

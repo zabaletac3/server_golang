@@ -4,15 +4,33 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	sharedErrors "github.com/eren_dev/go_server/internal/shared/errors"
 )
 
+// ErrorResponse represents a standard error response
 type ErrorResponse struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	RequestID string            `json:"request_id"`
+	Timestamp string            `json:"timestamp"`
+	Code      string            `json:"code"`
+	Message   string            `json:"message"`
+	Path      string            `json:"path"`
+	Details   map[string]string `json:"details,omitempty"`
 }
 
+// NewErrorResponse creates a new error response with request ID
+func NewErrorResponse(requestID, path, code, message string) ErrorResponse {
+	return ErrorResponse{
+		RequestID: requestID,
+		Timestamp: time.Now().Format(time.RFC3339),
+		Code:      code,
+		Message:   message,
+		Path:      path,
+	}
+}
+
+// FromError converts an error to HTTP status code and ErrorResponse
 func FromError(err error) (int, ErrorResponse) {
 	errMsg := err.Error()
 
@@ -109,3 +127,16 @@ func FromError(err error) (int, ErrorResponse) {
 		}
 	}
 }
+
+// Error codes for standard responses
+const (
+	ErrCodeValidation      = "VALIDATION_ERROR"
+	ErrCodeNotFound        = "NOT_FOUND"
+	ErrCodeUnauthorized    = "UNAUTHORIZED"
+	ErrCodeForbidden       = "FORBIDDEN"
+	ErrCodeConflict        = "CONFLICT"
+	ErrCodeInternal        = "INTERNAL_ERROR"
+	ErrCodeBadRequest      = "BAD_REQUEST"
+	ErrCodeInvalidInput    = "INVALID_INPUT"
+	ErrCodeServiceUnavailable = "SERVICE_UNAVAILABLE"
+)

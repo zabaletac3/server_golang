@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/notifications"
 	"github.com/eren_dev/go_server/internal/modules/owners"
 	"github.com/eren_dev/go_server/internal/modules/patients"
@@ -26,16 +27,18 @@ type Service struct {
 	ownerRepo       owners.OwnerRepository
 	userRepo        users.UserRepository
 	notificationSvc NotificationSender
+	cfg             *config.Config
 }
 
 // NewService creates a new appointment service
-func NewService(repo AppointmentRepository, patientRepo patients.PatientRepository, ownerRepo owners.OwnerRepository, userRepo users.UserRepository, notificationSvc NotificationSender) *Service {
+func NewService(repo AppointmentRepository, patientRepo patients.PatientRepository, ownerRepo owners.OwnerRepository, userRepo users.UserRepository, notificationSvc NotificationSender, cfg *config.Config) *Service {
 	return &Service{
 		repo:            repo,
 		patientRepo:     patientRepo,
 		ownerRepo:       ownerRepo,
 		userRepo:        userRepo,
 		notificationSvc: notificationSvc,
+		cfg:             cfg,
 	}
 }
 
@@ -70,7 +73,7 @@ func (s *Service) validateAppointmentTime(scheduledAt time.Time) error {
 	}
 
 	hour := scheduledAt.Hour()
-	if hour < 8 || hour >= 18 {
+	if hour < s.cfg.AppointmentBusinessStartHour || hour >= s.cfg.AppointmentBusinessEndHour {
 		return ErrInvalidAppointmentTime
 	}
 

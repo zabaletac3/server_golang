@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/notifications"
 	"github.com/eren_dev/go_server/internal/modules/owners"
 	"github.com/eren_dev/go_server/internal/modules/patients"
@@ -14,7 +15,7 @@ import (
 )
 
 // RegisterAdminRoutes registers admin-panel routes under /api/appointments (JWT + RBAC)
-func RegisterAdminRoutes(private *httpx.Router, db *database.MongoDB, pushProvider platformNotifications.PushProvider) {
+func RegisterAdminRoutes(private *httpx.Router, db *database.MongoDB, pushProvider platformNotifications.PushProvider, cfg *config.Config) {
 	repo := NewAppointmentRepository(db)
 	patientRepo := patients.NewPatientRepository(db)
 	ownerRepo := owners.NewRepository(db)
@@ -25,7 +26,7 @@ func RegisterAdminRoutes(private *httpx.Router, db *database.MongoDB, pushProvid
 		log.Printf("failed to ensure indexes for appointments: %v", err)
 	}
 
-	service := NewService(repo, patientRepo, ownerRepo, userRepo, notifSvc)
+	service := NewService(repo, patientRepo, ownerRepo, userRepo, notifSvc, cfg)
 	handler := NewHandler(service)
 
 	p := private.Group("/appointments")
@@ -41,7 +42,7 @@ func RegisterAdminRoutes(private *httpx.Router, db *database.MongoDB, pushProvid
 }
 
 // RegisterMobileRoutes registers mobile (owner-facing) routes under /mobile/appointments
-func RegisterMobileRoutes(mobile *httpx.Router, db *database.MongoDB, pushProvider platformNotifications.PushProvider) {
+func RegisterMobileRoutes(mobile *httpx.Router, db *database.MongoDB, pushProvider platformNotifications.PushProvider, cfg *config.Config) {
 	repo := NewAppointmentRepository(db)
 	patientRepo := patients.NewPatientRepository(db)
 	ownerRepo := owners.NewRepository(db)
@@ -52,7 +53,7 @@ func RegisterMobileRoutes(mobile *httpx.Router, db *database.MongoDB, pushProvid
 		log.Printf("failed to ensure indexes for appointments: %v", err)
 	}
 
-	service := NewService(repo, patientRepo, ownerRepo, userRepo, notifSvc)
+	service := NewService(repo, patientRepo, ownerRepo, userRepo, notifSvc, cfg)
 	handler := NewHandler(service)
 
 	m := mobile.Group("/appointments")

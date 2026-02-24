@@ -1,6 +1,8 @@
 package tenant
 
 import (
+	"github.com/eren_dev/go_server/internal/config"
+	"github.com/eren_dev/go_server/internal/modules/audit"
 	"github.com/eren_dev/go_server/internal/modules/payments"
 	"github.com/eren_dev/go_server/internal/modules/plans"
 	"github.com/eren_dev/go_server/internal/modules/users"
@@ -9,7 +11,7 @@ import (
 	"github.com/eren_dev/go_server/internal/shared/httpx"
 )
 
-func RegisterRoutes(r *httpx.Router, db *database.MongoDB, paymentManager *payment.PaymentManager) {
+func RegisterRoutes(r *httpx.Router, db *database.MongoDB, paymentManager *payment.PaymentManager, cfg *config.Config, auditService *audit.Service) {
 	repo := NewTenantRepository(db)
 	userRepo := users.NewRepository(db)
 	planRepo := plans.NewPlanRepository(db)
@@ -18,7 +20,7 @@ func RegisterRoutes(r *httpx.Router, db *database.MongoDB, paymentManager *payme
 	paymentService := payments.NewPaymentService(paymentRepo)
 	paymentHandler := payments.NewPaymentHandler(paymentService)
 
-	service := NewTenantService(repo, userRepo, planRepo, paymentService, paymentManager)
+	service := NewTenantService(repo, userRepo, planRepo, paymentService, paymentManager, auditService, cfg)
 	handler := NewHandler(service)
 
 	tenants := r.Group("/tenants")

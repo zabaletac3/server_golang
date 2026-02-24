@@ -18,13 +18,19 @@ func Adapt(handler AppHandler) gin.HandlerFunc {
 		if err != nil {
 			status, payload := FromError(err)
 
+			// Add request ID to error response
+			requestID, _ := logger.RequestIDFromContext(ctx)
+			payload.RequestID = requestID
+			payload.Path = c.Request.URL.Path
+			payload.Timestamp = time.Now().UTC().Format(time.RFC3339)
+
 			logger.Default().Error(ctx,
 				"http_request_failed",
 				"error", err,
 				"status", status,
 			)
 
-			writeResponse(c, status, false, payload)
+			c.JSON(status, payload)
 			return
 		}
 

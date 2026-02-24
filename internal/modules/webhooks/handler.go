@@ -3,6 +3,8 @@ package webhooks
 import (
 	"context"
 	"io"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +14,7 @@ import (
 	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/platform/logger"
 	"github.com/eren_dev/go_server/internal/platform/payment"
+	"github.com/eren_dev/go_server/internal/platform/webhook"
 )
 
 type WebhookHandler struct {
@@ -19,6 +22,7 @@ type WebhookHandler struct {
 	paymentService *payments.PaymentService
 	tenantRepo     tenant.TenantRepository
 	planRepo       plans.PlanRepository
+	validator      *webhook.SignatureValidator
 }
 
 func NewWebhookHandler(
@@ -26,12 +30,14 @@ func NewWebhookHandler(
 	paymentService *payments.PaymentService,
 	tenantRepo tenant.TenantRepository,
 	planRepo plans.PlanRepository,
+	validator *webhook.SignatureValidator,
 ) *WebhookHandler {
 	return &WebhookHandler{
 		paymentManager: paymentManager,
 		paymentService: paymentService,
 		tenantRepo:     tenantRepo,
 		planRepo:       planRepo,
+		validator:      validator,
 	}
 }
 
@@ -59,6 +65,20 @@ func (h *WebhookHandler) ProcessWebhook(c *gin.Context) (any, error) {
 	signature := c.GetHeader("X-Signature")
 	if signature == "" {
 		signature = c.GetHeader("X-Wompi-Signature")
+	}
+
+	// Validar que la firma no esté vacía
+	if signature == "" {
+		logger.Default().Warn(c.Request.Context(), "webhook_missing_signature", "provider", providerName)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing signature header"})
+		return nil, nil
+	}
+
+	// Validar firma según el provider
+	if err := h.validateSignature(providerName, signature, string(bodyBytes)); err != nil {
+		logger.Default().Error(c.Request.Context(), "webhook_signature_invalid", "error", err, "provider", providerName)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid signature"})
+		return nil, nil
 	}
 
 	// Convertir provider name a tipo
@@ -98,6 +118,21 @@ func (h *WebhookHandler) ProcessWebhook(c *gin.Context) (any, error) {
 		"status": "received",
 		"event":  event.EventType,
 	}, nil
+}
+
+// validateSignature validates the webhook signature based on provider
+func (h *WebhookHandler) validateSignature(provider, signature, payload string) error {
+	if h.validator == nil {
+		return nil // Skip validation if validator not configured
+	}
+
+	switch strings.ToLower(provider) {
+	case "stripe":
+		return h.validator.ValidateStripe(signature, payload)
+	default:
+		// Wompi and other providers use standard HMAC-SHA256
+		return h.validator.Validate(provider, signature, payload)
+	}
 }
 
 func (h *WebhookHandler) handleWebhookEvent(ctx context.Context, event *payment.WebhookEvent) error {

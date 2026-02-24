@@ -1,12 +1,15 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/eren_dev/go_server/internal/platform/cache"
 	sharedAuth "github.com/eren_dev/go_server/internal/shared/auth"
 	"github.com/eren_dev/go_server/internal/modules/permissions"
 	"github.com/eren_dev/go_server/internal/modules/resources"
@@ -20,6 +23,7 @@ type RBACConfig struct {
 	RoleRepo       roles.RoleRepository
 	PermissionRepo permissions.PermissionRepository
 	ResourceRepo   resources.ResourceRepository
+	Cache          cache.Cache // Optional cache for RBAC data
 }
 
 // RBACMiddleware verifica que el usuario autenticado tenga permiso para
@@ -27,11 +31,13 @@ type RBACConfig struct {
 //
 // Requiere que JWTMiddleware haya sido ejecutado antes (user_id en contexto).
 //
-// Flujo (4 queries a MongoDB):
-//  1. Obtener user → role_ids
-//  2. Obtener roles WHERE _id IN role_ids → aplanar permissions_ids
-//  3. Obtener permissions WHERE _id IN permissions_ids AND action = método HTTP
-//  4. Verificar si algún resource de esos permissions tiene name = segmento de ruta
+// Flujo (con cache):
+//  1. Check cache for user permissions → hit: skip to step 4
+//  2. Obtener user → role_ids
+//  3. Obtener roles WHERE _id IN role_ids → aplanar permissions_ids
+//  4. Obtener permissions WHERE _id IN permissions_ids AND action = método HTTP
+//  5. Verificar si algún resource de esos permissions tiene name = segmento de ruta
+//  6. Cache result for future requests
 func RBACMiddleware(cfg RBACConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
@@ -58,6 +64,22 @@ func RBACMiddleware(cfg RBACConfig) gin.HandlerFunc {
 		if resourceName == "" {
 			c.Next()
 			return
+		}
+
+		// Try cache first if enabled
+		if cfg.Cache != nil && cfg.Cache.IsEnabled() {
+			allowed, err := checkCachePermission(ctx, cfg.Cache, userID, resourceName, string(action))
+			if err == nil {
+				if allowed {
+					c.Next()
+					return
+				}
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+					"success": false,
+					"error":   "access denied",
+				})
+				return
+			}
 		}
 
 		// 1. Obtener usuario y sus role_ids
@@ -115,6 +137,11 @@ func RBACMiddleware(cfg RBACConfig) gin.HandlerFunc {
 			return
 		}
 
+		// Cache the permission result
+		if cfg.Cache != nil && cfg.Cache.IsEnabled() {
+			_ = cachePermissionResult(ctx, cfg.Cache, userID, resourceName, string(action), allowed)
+		}
+
 		c.Next()
 	}
 }
@@ -149,4 +176,26 @@ func flattenPermissionIDs(userRoles []*roles.Role) []primitive.ObjectID {
 		}
 	}
 	return result
+}
+
+// checkCachePermission checks if a user has permission for a resource/action in cache
+// Returns (allowed, nil) on cache hit, (false, ErrCacheMiss) on cache miss
+func checkCachePermission(ctx context.Context, c cache.Cache, userID, resourceName, action string) (bool, error) {
+	key := fmt.Sprintf(cache.CacheKeyUserPerms, userID, fmt.Sprintf("%s:%s", resourceName, action))
+	val, err := c.Get(ctx, key)
+	if err != nil {
+		return false, err
+	}
+	return val == "1", nil
+}
+
+// cachePermissionResult caches the permission check result
+// allowed=true is stored as "1", allowed=false as "0"
+func cachePermissionResult(ctx context.Context, c cache.Cache, userID, resourceName, action string, allowed bool) error {
+	key := fmt.Sprintf(cache.CacheKeyUserPerms, userID, fmt.Sprintf("%s:%s", resourceName, action))
+	value := "0"
+	if allowed {
+		value = "1"
+	}
+	return c.Set(ctx, key, value, cache.CacheDefaultTTL)
 }

@@ -11,6 +11,7 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/eren_dev/go_server/internal/config"
+	"github.com/eren_dev/go_server/internal/platform/circuitbreaker"
 	"github.com/eren_dev/go_server/internal/platform/notifications"
 )
 
@@ -70,6 +71,13 @@ func (p *fcmProvider) Send(ctx context.Context, tokens []string, payload notific
 		return nil
 	}
 
+	_, err := circuitbreaker.ExecuteWithFCMBreaker(func() (interface{}, error) {
+		return nil, p.sendImpl(ctx, tokens, payload)
+	})
+	return err
+}
+
+func (p *fcmProvider) sendImpl(ctx context.Context, tokens []string, payload notifications.PushPayload) error {
 	// Use SendEachForMulticast for batching (up to 500 tokens per call)
 	message := &messaging.MulticastMessage{
 		Tokens: tokens,

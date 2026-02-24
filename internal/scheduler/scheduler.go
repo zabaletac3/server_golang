@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/eren_dev/go_server/internal/app/lifecycle"
+	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/appointments"
 	"github.com/eren_dev/go_server/internal/modules/notifications"
 	"github.com/eren_dev/go_server/internal/shared/database"
@@ -22,11 +23,11 @@ type Scheduler struct {
 	stopCh          chan struct{}
 }
 
-func New(db *database.MongoDB, notificationSvc *notifications.Service, logger *slog.Logger) *Scheduler {
+func New(db *database.MongoDB, notificationSvc *notifications.Service, logger *slog.Logger, cfg *config.Config) *Scheduler {
 	return &Scheduler{
 		appointmentRepo: appointments.NewAppointmentRepository(db),
 		notificationSvc: notificationSvc,
-		interval:        15 * time.Minute, // check every 15 minutes
+		interval:        time.Duration(cfg.SchedulerIntervalMinutes) * time.Minute,
 		logger:          logger,
 		stopCh:          make(chan struct{}),
 	}

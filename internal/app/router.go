@@ -1,9 +1,12 @@
 package app
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/eren_dev/go_server/internal/config"
+	"github.com/eren_dev/go_server/internal/modules/audit"
 	"github.com/eren_dev/go_server/internal/modules/appointments"
 	"github.com/eren_dev/go_server/internal/modules/auth"
 	mobileAuth "github.com/eren_dev/go_server/internal/modules/mobile_auth"
@@ -18,13 +21,39 @@ import (
 	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/modules/users"
 	"github.com/eren_dev/go_server/internal/modules/webhooks"
+	"github.com/eren_dev/go_server/internal/platform/cache"
 	platformNotifications "github.com/eren_dev/go_server/internal/platform/notifications"
 	"github.com/eren_dev/go_server/internal/platform/payment"
+	"github.com/eren_dev/go_server/internal/platform/ratelimit"
 	sharedAuth "github.com/eren_dev/go_server/internal/shared/auth"
 	"github.com/eren_dev/go_server/internal/shared/database"
 	"github.com/eren_dev/go_server/internal/shared/httpx"
 	sharedMiddleware "github.com/eren_dev/go_server/internal/shared/middleware"
 )
+
+// initializeCache creates a Redis cache client if REDIS_ADDR is configured
+func initializeCache() cache.Cache {
+	addr := os.Getenv("REDIS_ADDR")
+	if addr == "" {
+		return nil // Cache disabled
+	}
+
+	password := os.Getenv("REDIS_PASSWORD")
+	db := 0
+
+	c, err := cache.NewRedisCache(cache.Config{
+		Addr:     addr,
+		Password: password,
+		DB:       db,
+		Prefix:   "vetsify",
+	})
+	if err != nil {
+		// Log error but continue without cache
+		return nil
+	}
+
+	return c
+}
 
 func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config, paymentManager *payment.PaymentManager, pushProvider platformNotifications.PushProvider) {
 	r := httpx.NewRouter(engine)
@@ -58,15 +87,31 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 	mobileTenant.Use(sharedMiddleware.OwnerGuardMiddleware())
 
 	if db != nil {
+		// Initialize optional Redis cache (disabled if REDIS_ADDR not configured)
+		redisCache := initializeCache()
+
+		// Initialize hierarchical rate limiter
+		rateLimiterCfg := ratelimit.DefaultConfig()
+		rateLimiter := ratelimit.NewLimiter(rateLimiterCfg)
+
+		// Initialize audit service
+		auditRepo := audit.NewRepository(db)
+		auditService := audit.NewService(auditRepo)
+
 		// RBAC middleware aplicado a rutas de staff
 		rbacMiddleware := sharedMiddleware.RBACMiddleware(sharedMiddleware.RBACConfig{
 			UserRepo:       users.NewRepository(db),
 			RoleRepo:       roles.NewRepository(db),
 			PermissionRepo: permissions.NewRepository(db),
 			ResourceRepo:   resources.NewRepository(db),
+			Cache:          redisCache,
 		})
 		private.Use(rbacMiddleware)
 		privateTenant.Use(rbacMiddleware)
+
+		// Apply tenant rate limiting to tenant-scoped routes
+		privateTenant.Use(sharedMiddleware.TenantRateLimitMiddleware(rateLimiter))
+		mobileTenant.Use(sharedMiddleware.TenantRateLimitMiddleware(rateLimiter))
 
 		// Staff auth: rutas públicas + /auth/me sin RBAC
 		auth.RegisterRoutes(public, authPrivate, db, cfg)
@@ -78,7 +123,7 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		owners.RegisterAdminRoutes(private, db)
 
 		// Tenant module (JWT + RBAC)
-		tenant.RegisterRoutes(private, db, paymentManager)
+		tenant.RegisterRoutes(private, db, paymentManager, cfg, auditService)
 
 		// Plans module (JWT + RBAC)
 		plans.RegisterRoutes(private, db)
@@ -87,7 +132,7 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		payments.RegisterRoutes(private, db)
 
 		// Webhooks module (público)
-		webhooks.RegisterRoutes(public, db, paymentManager)
+		webhooks.RegisterRoutes(public, db, paymentManager, cfg)
 
 		// RBAC modules (JWT + RBAC)
 		resources.RegisterRoutes(private, db)
@@ -98,7 +143,7 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		patients.RegisterAdminRoutes(privateTenant, db)
 
 		// Appointments (JWT + Tenant + RBAC)
-		appointments.RegisterAdminRoutes(privateTenant, db, pushProvider)
+		appointments.RegisterAdminRoutes(privateTenant, db, pushProvider, cfg)
 
 		// Mobile auth routes (public + owner-private)
 		mobileAuth.RegisterRoutes(mobilePublic, mobilePrivate, db, cfg)
@@ -110,7 +155,7 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 		patients.RegisterMobileRoutes(mobileTenant, db)
 
 		// Mobile appointments (owner-private + tenant)
-		appointments.RegisterMobileRoutes(mobileTenant, db, pushProvider)
+		appointments.RegisterMobileRoutes(mobileTenant, db, pushProvider, cfg)
 
 		// Mobile notifications (owner-private)
 		notifications.RegisterMobileRoutes(mobilePrivate, db, pushProvider)

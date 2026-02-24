@@ -70,6 +70,12 @@ type Config struct {
 
 	// Firebase / Push Notifications
 	FirebaseCredentialsPath string
+
+	// Business Rules
+	AppointmentBusinessStartHour int `env:"APPOINTMENT_START_HOUR" envDefault:"8"`
+	AppointmentBusinessEndHour   int `env:"APPOINTMENT_END_HOUR" envDefault:"18"`
+	TenantTrialDays              int `env:"TENANT_TRIAL_DAYS" envDefault:"14"`
+	SchedulerIntervalMinutes     int `env:"SCHEDULER_INTERVAL_MINS" envDefault:"15"`
 }
 
 func Load() *Config {
@@ -134,6 +140,12 @@ func Load() *Config {
 		StripeWebhookSecret:    getEnv("STRIPE_WEBHOOK_SECRET", ""),
 
 		FirebaseCredentialsPath: getEnv("FIREBASE_CREDENTIALS_PATH", ""),
+
+		// Business Rules
+		AppointmentBusinessStartHour: getEnvInt("APPOINTMENT_START_HOUR", 8),
+		AppointmentBusinessEndHour:   getEnvInt("APPOINTMENT_END_HOUR", 18),
+		TenantTrialDays:              getEnvInt("TENANT_TRIAL_DAYS", 14),
+		SchedulerIntervalMinutes:     getEnvInt("SCHEDULER_INTERVAL_MINS", 15),
 	}
 }
 

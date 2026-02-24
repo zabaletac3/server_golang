@@ -67,7 +67,8 @@ func (s *Service) Send(ctx context.Context, dto *SendDTO) error {
 // sendPushAsync collects active push tokens for the owner and fires FCM in the background.
 func (s *Service) sendPushAsync(notif *Notification) {
 	go func() {
-		ctx := context.Background()
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 
 		owner, err := s.ownerRepo.FindByID(ctx, notif.OwnerID.Hex())
 		if err != nil {

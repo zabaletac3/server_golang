@@ -10,6 +10,7 @@ import (
 	"github.com/eren_dev/go_server/internal/app/docs"
 	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/health"
+	"github.com/eren_dev/go_server/internal/platform/metrics"
 	"github.com/eren_dev/go_server/internal/platform/notifications"
 	"github.com/eren_dev/go_server/internal/platform/payment"
 	"github.com/eren_dev/go_server/internal/shared/database"
@@ -21,7 +22,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func NewServer(cfg *config.Config, db *database.MongoDB, paymentManager *payment.PaymentManager, pushProvider notifications.PushProvider) (*Server, error) {
+func NewServer(cfg *config.Config, db *database.MongoDB, paymentManager *payment.PaymentManager, pushProvider notifications.PushProvider, metricsService *metrics.Metrics) (*Server, error) {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.New()
@@ -38,6 +39,9 @@ func NewServer(cfg *config.Config, db *database.MongoDB, paymentManager *payment
 	router.Use(middleware.BodyLimit(cfg))
 	router.Use(middleware.Compression(cfg))
 	router.Use(middleware.SlogLogger())
+
+	// Register Prometheus metrics middleware
+	middleware.RegisterMetricsRoutes(router, metricsService)
 
 	router.NoRoute(httpx.NotFoundHandler())
 	router.NoMethod(httpx.MethodNotAllowedHandler())

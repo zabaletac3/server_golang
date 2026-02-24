@@ -9,6 +9,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/eren_dev/go_server/internal/config"
+	"github.com/eren_dev/go_server/internal/modules/audit"
 	"github.com/eren_dev/go_server/internal/modules/payments"
 	"github.com/eren_dev/go_server/internal/modules/plans"
 	"github.com/eren_dev/go_server/internal/modules/users"
@@ -23,15 +25,19 @@ type TenantService struct {
 	planRepo       plans.PlanRepository
 	paymentService *payments.PaymentService
 	paymentManager *payment.PaymentManager
+	auditService   *audit.Service
+	cfg            *config.Config
 }
 
-func NewTenantService(repo TenantRepository, userRepo users.UserRepository, planRepo plans.PlanRepository, paymentService *payments.PaymentService, paymentManager *payment.PaymentManager) *TenantService {
+func NewTenantService(repo TenantRepository, userRepo users.UserRepository, planRepo plans.PlanRepository, paymentService *payments.PaymentService, paymentManager *payment.PaymentManager, auditService *audit.Service, cfg *config.Config) *TenantService {
 	return &TenantService{
 		repo:           repo,
 		userRepo:       userRepo,
 		planRepo:       planRepo,
 		paymentService: paymentService,
 		paymentManager: paymentManager,
+		auditService:   auditService,
+		cfg:            cfg,
 	}
 }
 
@@ -51,7 +57,7 @@ func (s *TenantService) Create(ctx context.Context, dto *CreateTenantDTO) (*Tena
 	}
 
 	now := time.Now()
-	trialEndsAt := now.Add(14 * 24 * time.Hour) // 14 días de trial
+	trialEndsAt := now.AddDate(0, 0, s.cfg.TenantTrialDays)
 
 	tenant := &Tenant{
 		ID:                   primitive.NewObjectID(),
@@ -94,6 +100,16 @@ func (s *TenantService) Create(ctx context.Context, dto *CreateTenantDTO) (*Tena
 	if err := s.repo.Create(ctx, tenant); err != nil {
 		return nil, err
 	}
+
+	// Audit log
+	if s.auditService != nil {
+		_ = s.auditService.LogTenantAction(ctx, tenant.ID, ownerID, audit.EventTenantCreated, "create", "Tenant created", map[string]interface{}{
+			"name":           tenant.Name,
+			"commercial_name": tenant.CommercialName,
+			"email":          tenant.Email,
+		})
+	}
+
 	return ToResponse(tenant), nil
 }
 
@@ -169,6 +185,17 @@ func (s *TenantService) Subscribe(ctx context.Context, tenantID string, dto *Sub
 
 	if err := s.repo.Update(ctx, tenant); err != nil {
 		return nil, err
+	}
+
+	// Audit log
+	if s.auditService != nil {
+		_ = s.auditService.LogTenantAction(ctx, tenant.ID, tenant.OwnerID, audit.EventTenantSubscription, "subscribe", fmt.Sprintf("Subscription initiated for plan %s", plan.Name), map[string]interface{}{
+			"plan_id":         plan.ID.Hex(),
+			"plan_name":       plan.Name,
+			"billing_period":  dto.BillingPeriod,
+			"payment_id":      paymentResp.ID,
+			"amount":          amountInCents,
+		})
 	}
 
 	return &SubscribeResponse{

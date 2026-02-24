@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eren_dev/go_server/internal/config"
 	"github.com/eren_dev/go_server/internal/modules/notifications"
 	"github.com/eren_dev/go_server/internal/modules/owners"
 	"github.com/eren_dev/go_server/internal/modules/patients"
@@ -391,6 +392,7 @@ func newTestService(repo *mockAppointmentRepo, patientRepo *mockPatientRepo, own
 		ownerRepo:       ownerRepo,
 		userRepo:        userRepo,
 		notificationSvc: notifSvc,
+		cfg:             &config.Config{AppointmentBusinessStartHour: 8, AppointmentBusinessEndHour: 18},
 	}
 }
 

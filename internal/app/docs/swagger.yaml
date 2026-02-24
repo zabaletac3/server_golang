@@ -430,6 +430,40 @@ definitions:
         example: John Doe
         type: string
     type: object
+  internal_modules_health.ComponentHealth:
+    properties:
+      error:
+        type: string
+      latency_ms:
+        type: integer
+      status:
+        $ref: '#/definitions/internal_modules_health.HealthStatus'
+    type: object
+  internal_modules_health.HealthReport:
+    properties:
+      components:
+        additionalProperties:
+          $ref: '#/definitions/internal_modules_health.ComponentHealth'
+        type: object
+      environment:
+        type: string
+      status:
+        $ref: '#/definitions/internal_modules_health.HealthStatus'
+      timestamp:
+        type: string
+      version:
+        type: string
+    type: object
+  internal_modules_health.HealthStatus:
+    enum:
+    - healthy
+    - unhealthy
+    - degraded
+    type: string
+    x-enum-varnames:
+    - HealthStatusHealthy
+    - HealthStatusUnhealthy
+    - HealthStatusDegraded
   internal_modules_mobile_auth.LoginDTO:
     properties:
       email:
@@ -2053,6 +2087,94 @@ paths:
       summary: Get calendar view
       tags:
       - admin-appointments
+  /api/audit-logs:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated audit logs with optional filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: string
+      - description: Filter by event type
+        in: query
+        name: event_type
+        type: string
+      - description: Filter by resource
+        in: query
+        name: resource
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get audit logs
+      tags:
+      - audit
+  /api/audit-logs/{resource}/{resource_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get audit logs for a specific resource
+      parameters:
+      - description: Resource name
+        in: path
+        name: resource
+        required: true
+        type: string
+      - description: Resource ID
+        in: path
+        name: resource_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get resource audit logs
+      tags:
+      - audit
   /api/auth/login:
     post:
       consumes:
@@ -3837,6 +3959,23 @@ paths:
       summary: Procesar webhook de pago
       tags:
       - webhooks
+  /health:
+    get:
+      description: Check the health status of all components
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_health.HealthReport'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/internal_modules_health.HealthReport'
+      summary: Health check
+      tags:
+      - health
   /mobile/appointments:
     get:
       consumes:
@@ -4387,6 +4526,27 @@ paths:
       summary: Get my patient by ID
       tags:
       - mobile/patients
+  /ready:
+    get:
+      description: Check if the service is ready to accept traffic
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Readiness check
+      tags:
+      - health
 securityDefinitions:
   Bearer:
     description: 'Ingresa el token con el prefijo Bearer: Bearer <token>'
