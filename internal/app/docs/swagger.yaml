@@ -464,6 +464,267 @@ definitions:
     - HealthStatusHealthy
     - HealthStatusUnhealthy
     - HealthStatusDegraded
+  internal_modules_inventory.CategoryResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      parent_id:
+        type: string
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_inventory.CreateCategoryDTO:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      parent_id:
+        type: string
+    required:
+    - name
+    type: object
+  internal_modules_inventory.CreateProductDTO:
+    properties:
+      active:
+        type: boolean
+      barcode:
+        type: string
+      category:
+        enum:
+        - medicine
+        - supply
+        - food
+        - equipment
+        type: string
+      category_id:
+        type: string
+      description:
+        type: string
+      expiration_date:
+        description: RFC3339
+        type: string
+      min_stock:
+        minimum: 0
+        type: integer
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      purchase_price:
+        minimum: 0
+        type: number
+      sale_price:
+        minimum: 0
+        type: number
+      sku:
+        maxLength: 50
+        minLength: 1
+        type: string
+      stock:
+        minimum: 0
+        type: integer
+      supplier_id:
+        type: string
+      unit:
+        enum:
+        - tablet
+        - ml
+        - piece
+        - kg
+        - gram
+        - box
+        - bottle
+        type: string
+    required:
+    - category
+    - name
+    - purchase_price
+    - sale_price
+    - sku
+    - unit
+    type: object
+  internal_modules_inventory.ProductAlertResponse:
+    properties:
+      alert_type:
+        description: low_stock, expiring, expired
+        type: string
+      current_stock:
+        type: integer
+      days_until_expiry:
+        type: integer
+      expiration_date:
+        type: string
+      min_stock:
+        type: integer
+      product_id:
+        type: string
+      product_name:
+        type: string
+      stock_difference:
+        description: Negative if below min
+        type: integer
+    type: object
+  internal_modules_inventory.ProductResponse:
+    properties:
+      active:
+        type: boolean
+      barcode:
+        type: string
+      category:
+        type: string
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      expiration_date:
+        type: string
+      id:
+        type: string
+      min_stock:
+        type: integer
+      name:
+        type: string
+      purchase_price:
+        type: number
+      sale_price:
+        type: number
+      sku:
+        type: string
+      stock:
+        type: integer
+      supplier_id:
+        type: string
+      tenant_id:
+        type: string
+      unit:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_inventory.StockInDTO:
+    properties:
+      notes:
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+      reason:
+        enum:
+        - purchase
+        - return
+        - adjustment
+        type: string
+      reference_id:
+        description: Purchase order ID, etc.
+        type: string
+    required:
+    - quantity
+    - reason
+    type: object
+  internal_modules_inventory.StockMovementResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      notes:
+        type: string
+      product_id:
+        type: string
+      quantity:
+        type: integer
+      reason:
+        type: string
+      reference_id:
+        type: string
+      stock_after:
+        type: integer
+      stock_before:
+        type: integer
+      tenant_id:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: string
+    type: object
+  internal_modules_inventory.StockOutDTO:
+    properties:
+      notes:
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+      reason:
+        enum:
+        - sale
+        - treatment
+        - adjustment
+        - expired
+        - damaged
+        - lost
+        type: string
+      reference_id:
+        description: AppointmentID, OrderID, etc.
+        type: string
+    required:
+    - quantity
+    - reason
+    type: object
+  internal_modules_inventory.UpdateCategoryDTO:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      parent_id:
+        type: string
+    type: object
+  internal_modules_inventory.UpdateProductDTO:
+    properties:
+      active:
+        type: boolean
+      barcode:
+        type: string
+      category:
+        type: string
+      category_id:
+        type: string
+      description:
+        type: string
+      expiration_date:
+        type: string
+      min_stock:
+        minimum: 0
+        type: integer
+      name:
+        type: string
+      purchase_price:
+        minimum: 0
+        type: number
+      sale_price:
+        minimum: 0
+        type: number
+      sku:
+        type: string
+      supplier_id:
+        type: string
+      unit:
+        type: string
+    type: object
   internal_modules_medical_records.AllergyResponse:
     properties:
       allergen:
@@ -2735,6 +2996,158 @@ paths:
       summary: Registrar usuario
       tags:
       - auth
+  /api/categories:
+    get:
+      consumes:
+      - application/json
+      description: Get all categories for the tenant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_inventory.CategoryResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List categories
+      tags:
+      - inventory
+    post:
+      consumes:
+      - application/json
+      description: Create a new product category
+      parameters:
+      - description: Category data
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_inventory.CreateCategoryDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_inventory.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create category
+      tags:
+      - inventory
+  /api/categories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete category
+      tags:
+      - inventory
+    get:
+      consumes:
+      - application/json
+      description: Get category details by ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_inventory.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get category
+      tags:
+      - inventory
+    put:
+      consumes:
+      - application/json
+      description: Update category details
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated category data
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_inventory.UpdateCategoryDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_inventory.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update category
+      tags:
+      - inventory
   /api/medical-history:
     post:
       consumes:
@@ -3944,6 +4357,337 @@ paths:
       summary: Listar planes visibles
       tags:
       - plans
+  /api/products:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of products with optional filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - description: Filter by active status
+        in: query
+        name: active
+        type: boolean
+      - description: Filter low stock products
+        in: query
+        name: low_stock
+        type: boolean
+      - description: Filter expiring products
+        in: query
+        name: expiring
+        type: boolean
+      - description: Filter expired products
+        in: query
+        name: expired
+        type: boolean
+      - description: Search by name, SKU, barcode
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List products
+      tags:
+      - inventory
+    post:
+      consumes:
+      - application/json
+      description: Create a new product in the inventory
+      parameters:
+      - description: Product data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_inventory.CreateProductDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_inventory.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create product
+      tags:
+      - inventory
+  /api/products/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a product (only if stock = 0)
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete product
+      tags:
+      - inventory
+    get:
+      consumes:
+      - application/json
+      description: Get product details by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_inventory.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get product
+      tags:
+      - inventory
+    put:
+      consumes:
+      - application/json
+      description: Update product details
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated product data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_inventory.UpdateProductDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_inventory.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update product
+      tags:
+      - inventory
+  /api/products/{id}/stock-in:
+    post:
+      consumes:
+      - application/json
+      description: Add stock to a product (purchase, return, adjustment)
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Stock in data
+        in: body
+        name: stock
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_inventory.StockInDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_inventory.StockMovementResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Add stock
+      tags:
+      - inventory
+  /api/products/{id}/stock-out:
+    post:
+      consumes:
+      - application/json
+      description: Deduct stock from a product (sale, treatment, expired, etc.)
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Stock out data
+        in: body
+        name: stock
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_inventory.StockOutDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_inventory.StockMovementResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Deduct stock
+      tags:
+      - inventory
+  /api/products/alerts:
+    get:
+      consumes:
+      - application/json
+      description: Get all product alerts (low stock, expiring, expired)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_inventory.ProductAlertResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get product alerts
+      tags:
+      - inventory
+  /api/products/expiring:
+    get:
+      consumes:
+      - application/json
+      description: Get products expiring within 30 days
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_inventory.ProductResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get expiring products
+      tags:
+      - inventory
+  /api/products/low-stock:
+    get:
+      consumes:
+      - application/json
+      description: Get products with stock below minimum threshold
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_inventory.ProductResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get low stock products
+      tags:
+      - inventory
   /api/resources:
     get:
       consumes:
@@ -4390,6 +5134,60 @@ paths:
       summary: Resolve or create species
       tags:
       - species
+  /api/stock-movements:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of stock movements
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by product ID
+        in: query
+        name: product_id
+        type: string
+      - description: Filter by type (in, out, adjustment, expired)
+        in: query
+        name: type
+        type: string
+      - description: Filter by reason
+        in: query
+        name: reason
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List stock movements
+      tags:
+      - inventory
   /api/tenants:
     get:
       consumes:

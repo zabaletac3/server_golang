@@ -9,6 +9,7 @@ import (
 	"github.com/eren_dev/go_server/internal/modules/audit"
 	"github.com/eren_dev/go_server/internal/modules/appointments"
 	"github.com/eren_dev/go_server/internal/modules/auth"
+	"github.com/eren_dev/go_server/internal/modules/inventory"
 	"github.com/eren_dev/go_server/internal/modules/medical_records"
 	mobileAuth "github.com/eren_dev/go_server/internal/modules/mobile_auth"
 	"github.com/eren_dev/go_server/internal/modules/notifications"
@@ -148,6 +149,9 @@ func registerRoutes(engine *gin.Engine, db *database.MongoDB, cfg *config.Config
 
 		// Medical Records (JWT + Tenant + RBAC)
 		medical_records.RegisterAdminRoutes(privateTenant, db)
+
+		// Inventory (JWT + Tenant + RBAC)
+		inventory.RegisterAdminRoutes(privateTenant, db)
 
 		// Mobile auth routes (public + owner-private)
 		mobileAuth.RegisterRoutes(mobilePublic, mobilePrivate, db, cfg)
