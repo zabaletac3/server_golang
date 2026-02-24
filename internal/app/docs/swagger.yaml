@@ -2245,6 +2245,169 @@ definitions:
         example: "2024-01-01T00:00:00Z"
         type: string
     type: object
+  internal_modules_vaccinations.CreateVaccinationDTO:
+    properties:
+      application_date:
+        description: RFC3339
+        type: string
+      lot_number:
+        type: string
+      manufacturer:
+        type: string
+      next_due_date:
+        description: RFC3339
+        type: string
+      notes:
+        type: string
+      patient_id:
+        type: string
+      vaccine_name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      veterinarian_id:
+        type: string
+    required:
+    - application_date
+    - patient_id
+    - vaccine_name
+    - veterinarian_id
+    type: object
+  internal_modules_vaccinations.CreateVaccineDTO:
+    properties:
+      active:
+        type: boolean
+      description:
+        type: string
+      dose_number:
+        enum:
+        - first
+        - second
+        - booster
+        type: string
+      manufacturer:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      target_species:
+        items:
+          type: string
+        type: array
+      validity_months:
+        minimum: 1
+        type: integer
+    required:
+    - dose_number
+    - name
+    - target_species
+    - validity_months
+    type: object
+  internal_modules_vaccinations.UpdateVaccinationDTO:
+    properties:
+      lot_number:
+        type: string
+      manufacturer:
+        type: string
+      next_due_date:
+        type: string
+      notes:
+        type: string
+      vaccine_name:
+        type: string
+    type: object
+  internal_modules_vaccinations.UpdateVaccinationStatusDTO:
+    properties:
+      status:
+        enum:
+        - applied
+        - due
+        - overdue
+        type: string
+    required:
+    - status
+    type: object
+  internal_modules_vaccinations.UpdateVaccineDTO:
+    properties:
+      active:
+        type: boolean
+      description:
+        type: string
+      dose_number:
+        type: string
+      manufacturer:
+        type: string
+      name:
+        type: string
+      target_species:
+        items:
+          type: string
+        type: array
+      validity_months:
+        minimum: 1
+        type: integer
+    type: object
+  internal_modules_vaccinations.VaccinationResponse:
+    properties:
+      application_date:
+        type: string
+      certificate_number:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      lot_number:
+        type: string
+      manufacturer:
+        type: string
+      next_due_date:
+        type: string
+      notes:
+        type: string
+      owner_id:
+        type: string
+      patient_id:
+        type: string
+      status:
+        type: string
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+      vaccine_name:
+        type: string
+      veterinarian_id:
+        type: string
+    type: object
+  internal_modules_vaccinations.VaccineResponse:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      dose_number:
+        type: string
+      id:
+        type: string
+      manufacturer:
+        type: string
+      name:
+        type: string
+      target_species:
+        items:
+          type: string
+        type: array
+      tenant_id:
+        type: string
+      updated_at:
+        type: string
+      validity_months:
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -5591,6 +5754,495 @@ paths:
       summary: Actualizar usuario
       tags:
       - users
+  /api/vaccinations:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of vaccinations with optional filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by patient ID
+        in: query
+        name: patient_id
+        type: string
+      - description: Filter by veterinarian ID
+        in: query
+        name: veterinarian_id
+        type: string
+      - description: Filter by status (applied, due, overdue)
+        in: query
+        name: status
+        type: string
+      - description: Filter by vaccine name
+        in: query
+        name: vaccine_name
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: date_to
+        type: string
+      - description: Filter vaccinations due within 30 days
+        in: query
+        name: due_soon
+        type: boolean
+      - description: Filter overdue vaccinations
+        in: query
+        name: overdue
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List vaccinations
+      tags:
+      - vaccinations
+    post:
+      consumes:
+      - application/json
+      description: Register a new vaccination for a patient
+      parameters:
+      - description: Vaccination data
+        in: body
+        name: vaccination
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_vaccinations.CreateVaccinationDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_vaccinations.VaccinationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create vaccination
+      tags:
+      - vaccinations
+  /api/vaccinations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a vaccination
+      parameters:
+      - description: Vaccination ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete vaccination
+      tags:
+      - vaccinations
+    get:
+      consumes:
+      - application/json
+      description: Get vaccination details by ID
+      parameters:
+      - description: Vaccination ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_vaccinations.VaccinationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get vaccination
+      tags:
+      - vaccinations
+    put:
+      consumes:
+      - application/json
+      description: Update vaccination details
+      parameters:
+      - description: Vaccination ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated vaccination data
+        in: body
+        name: vaccination
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_vaccinations.UpdateVaccinationDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_vaccinations.VaccinationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update vaccination
+      tags:
+      - vaccinations
+  /api/vaccinations/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of a vaccination
+      parameters:
+      - description: Vaccination ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_vaccinations.UpdateVaccinationStatusDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_vaccinations.VaccinationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update vaccination status
+      tags:
+      - vaccinations
+  /api/vaccinations/due:
+    get:
+      consumes:
+      - application/json
+      description: Get vaccinations due within the next 30 days
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_vaccinations.VaccinationResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get due vaccinations
+      tags:
+      - vaccinations
+  /api/vaccinations/overdue:
+    get:
+      consumes:
+      - application/json
+      description: Get vaccinations that are past their due date
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_vaccinations.VaccinationResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get overdue vaccinations
+      tags:
+      - vaccinations
+  /api/vaccinations/patient/{patient_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all vaccinations for a specific patient
+      parameters:
+      - description: Patient ID
+        in: path
+        name: patient_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get patient vaccinations
+      tags:
+      - vaccinations
+  /api/vaccines:
+    get:
+      consumes:
+      - application/json
+      description: Get all vaccines for the tenant
+      parameters:
+      - description: Filter by dose type (first, second, booster)
+        in: query
+        name: dose_number
+        type: string
+      - description: Filter by target species
+        in: query
+        name: target_species
+        type: string
+      - description: Filter by active status
+        in: query
+        name: active
+        type: boolean
+      - description: Search by name or manufacturer
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_vaccinations.VaccineResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List vaccines
+      tags:
+      - vaccinations
+    post:
+      consumes:
+      - application/json
+      description: Create a new vaccine catalog entry
+      parameters:
+      - description: Vaccine data
+        in: body
+        name: vaccine
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_vaccinations.CreateVaccineDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_vaccinations.VaccineResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create vaccine
+      tags:
+      - vaccinations
+  /api/vaccines/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a vaccine from the catalog
+      parameters:
+      - description: Vaccine ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete vaccine
+      tags:
+      - vaccinations
+    get:
+      consumes:
+      - application/json
+      description: Get vaccine details by ID
+      parameters:
+      - description: Vaccine ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_vaccinations.VaccineResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get vaccine
+      tags:
+      - vaccinations
+    put:
+      consumes:
+      - application/json
+      description: Update vaccine details
+      parameters:
+      - description: Vaccine ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated vaccine data
+        in: body
+        name: vaccine
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_vaccinations.UpdateVaccineDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_vaccinations.VaccineResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update vaccine
+      tags:
+      - vaccinations
   /api/webhooks/{provider}:
     post:
       consumes:

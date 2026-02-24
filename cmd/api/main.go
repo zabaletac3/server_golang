@@ -19,6 +19,7 @@ import (
 	"github.com/eren_dev/go_server/internal/modules/inventory"
 	"github.com/eren_dev/go_server/internal/modules/medical_records"
 	"github.com/eren_dev/go_server/internal/modules/notifications"
+	"github.com/eren_dev/go_server/internal/modules/vaccinations"
 	"github.com/eren_dev/go_server/internal/modules/owners"
 	"github.com/eren_dev/go_server/internal/modules/tenant"
 	"github.com/eren_dev/go_server/internal/platform/logger"
@@ -116,6 +117,12 @@ func main() {
 			logger.Default().Error(context.Background(), "inventory_indexes_creation_failed", "error", err)
 		} else {
 			logger.Default().Info(context.Background(), "inventory_indexes_created")
+		}
+
+		if err := vaccinations.EnsureIndexes(context.Background(), db); err != nil {
+			logger.Default().Error(context.Background(), "vaccinations_indexes_creation_failed", "error", err)
+		} else {
+			logger.Default().Info(context.Background(), "vaccinations_indexes_created")
 		}
 	} else {
 		logger.Default().Info(context.Background(), "database_disabled", "reason", "MONGO_DATABASE not configured")
